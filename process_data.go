@@ -611,9 +611,7 @@ func processImportActions(l *ldap.Entry) string {
 	data.LDAP = l
 	//-- init map
 	data.Custom = make(map[string]string)
-	data.Account.UserID = getUserFieldValue(l, "UserID", data.Custom)
-
-	logger(1, "Post Import Actions for: "+data.Account.UserID, false)
+	
 	//-- Loop Matches
 	for _, action := range ldapImportConf.Actions {
 		switch action.Action {
@@ -696,6 +694,11 @@ func processImportActions(l *ldap.Entry) string {
 			logger(1, "Unknown Action: "+action.Action, false)
 		}
 	}
+	
+	data.Account.UserID = getUserFieldValue(l, "UserID", data.Custom)
+
+	logger(1, "Import Actions for: "+data.Account.UserID, false)
+
 	//-- Store Result in map of userid
 	var userID = strings.ToLower(data.Account.UserID)
 	HornbillCache.UsersWorking[userID] = data

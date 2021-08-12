@@ -1,12 +1,18 @@
 # CHANGELOG
 
+## 3.9.6
+
+Change:
+
+- Modification such that a calculated field can be used as User ID (eg Object SID)
+
 ## 3.9.5
 
 Change:
 
-- Rebuilt using latest version of goApiLib, to fix possible issue witt connections via a proxy
+- Rebuilt using latest version of goApiLib, to fix possible issue with connections via a proxy
 
-## 3.9.4
+## 3.9.4
 
 Fixed:
 
