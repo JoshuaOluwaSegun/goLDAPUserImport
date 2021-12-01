@@ -611,7 +611,7 @@ func processImportActions(l *ldap.Entry) string {
 	data.LDAP = l
 	//-- init map
 	data.Custom = make(map[string]string)
-	
+
 	//-- Loop Matches
 	for _, action := range ldapImportConf.Actions {
 		switch action.Action {
@@ -694,7 +694,7 @@ func processImportActions(l *ldap.Entry) string {
 			logger(1, "Unknown Action: "+action.Action, false)
 		}
 	}
-	
+
 	data.Account.UserID = getUserFieldValue(l, "UserID", data.Custom)
 
 	logger(1, "Import Actions for: "+data.Account.UserID, false)

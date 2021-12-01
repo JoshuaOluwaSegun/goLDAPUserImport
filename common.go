@@ -459,3 +459,24 @@ func getServerBuild() {
 	}
 
 }
+
+//sysOptionGet - gets and returns sys setting value
+func sysOptionGet(sysOption string) (optionValue string) {
+	loggerAPI.SetParam("filter", sysOption)
+	response, err := loggerAPI.Invoke("admin", "sysOptionGet")
+	if err != nil {
+		logger(4, "Could not retrieve System Setting ["+sysOption+"]: "+err.Error(), false)
+		return
+	}
+	var jsonRespon xmlmcSettingResponse
+	err = json.Unmarshal([]byte(response), &jsonRespon)
+	if err != nil {
+		logger(4, "Could not retrieve System Setting ["+sysOption+"]: "+err.Error(), false)
+		return
+	}
+	if !jsonRespon.MethodResult {
+		logger(4, "Could not retrieve System Setting ["+sysOption+"]: "+jsonRespon.State.Error, false)
+		return
+	}
+	return jsonRespon.Params.Option[0].Value
+}

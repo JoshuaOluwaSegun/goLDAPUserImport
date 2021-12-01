@@ -108,10 +108,9 @@ func loadUserGroups() {
 	//-- Only Load if Enabled
 	logger(1, "Loading User Orgs from Hornbill", false)
 
-	count := getCount("getUserAccountsGroupsList")
-	getUserAccountsGroupsList(count)
-
-	logger(1, "User Orgs Loaded: "+fmt.Sprintf("%d", len(HornbillCache.UserGroups))+"\n", false)
+	count := getCount("getUserAccountsGroupsListImport")
+	userAccountRecordCount := getUserAccountsGroupsList(count)
+	logger(1, "User Orgs Loaded: "+fmt.Sprintf("%d", userAccountRecordCount)+"\n", false)
 }
 
 //-- Check so that only data that relates to users in the LDAP data set are stored in the working set
@@ -121,21 +120,26 @@ func userIDExistsInLDAP(userID string) bool {
 	return present
 }
 
-func getUserAccountsGroupsList(count uint64) {
+func getUserAccountsGroupsList(count uint64) (recordCount int64) {
 	var loopCount uint64
 
 	//-- Init Map
 	HornbillCache.UserGroups = make(map[string][]string)
 	bar := pb.StartNew(int(count))
+	previousUser := ""
+	previousGroup := ""
 	//-- Load Results in pages of pageSize
 	for loopCount < count {
 		logger(1, "Loading User Accounts Orgs List Offset: "+fmt.Sprintf("%d", loopCount), false)
 
 		hornbillImport.SetParam("application", "com.hornbill.core")
-		hornbillImport.SetParam("queryName", "getUserAccountsGroupsList")
+		hornbillImport.SetParam("queryName", "getUserAccountsGroupsListImport")
 		hornbillImport.OpenElement("queryParams")
-		hornbillImport.SetParam("rowstart", strconv.FormatUint(loopCount, 10))
 		hornbillImport.SetParam("limit", strconv.Itoa(pageSize))
+		if previousUser != "" && previousGroup != "" {
+			hornbillImport.SetParam("previousRecordUserId", previousUser)
+			hornbillImport.SetParam("previousRecordGroupId", previousGroup)
+		}
 		hornbillImport.CloseElement("queryParams")
 		RespBody, xmlmcErr := hornbillImport.Invoke("data", "queryExec")
 
@@ -158,9 +162,12 @@ func getUserAccountsGroupsList(count uint64) {
 		for index := range JSONResp.Params.RowData.Row {
 			if userIDExistsInLDAP(JSONResp.Params.RowData.Row[index].HUserID) {
 				HornbillCache.UserGroups[strings.ToLower(JSONResp.Params.RowData.Row[index].HUserID)] = append(HornbillCache.UserGroups[strings.ToLower(JSONResp.Params.RowData.Row[index].HUserID)], JSONResp.Params.RowData.Row[index].HGroupID)
+				recordCount++
 			}
 		}
-		// Add 100
+		previousUser = JSONResp.Params.RowData.Row[len(JSONResp.Params.RowData.Row)-1].HUserID
+		previousGroup = JSONResp.Params.RowData.Row[len(JSONResp.Params.RowData.Row)-1].HGroupID
+		// Add loopcount
 		loopCount += uint64(pageSize)
 		bar.Add(len(JSONResp.Params.RowData.Row))
 		//-- Check for empty result set
@@ -169,7 +176,7 @@ func getUserAccountsGroupsList(count uint64) {
 		}
 	}
 	bar.FinishPrint("Account Orgs Loaded \n")
-
+	return
 }
 func getGroupsList(count uint64) {
 	var loopCount uint64
@@ -324,6 +331,7 @@ func getUserAccountList(count uint64) {
 	}
 	bar.FinishPrint("Accounts Loaded  \n")
 }
+
 func getSitesList(count uint64) {
 	var loopCount uint64
 	//-- Init Map

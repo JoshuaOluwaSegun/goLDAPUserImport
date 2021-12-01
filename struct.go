@@ -8,7 +8,7 @@ import (
 )
 
 //----- Constants -----
-const version = "3.9.6"
+const version = "3.10.0"
 const appName = "goLDAPUserImport"
 const applicationName = "LDAP Import Utility"
 const execName = "ldap_user_import"
@@ -47,7 +47,8 @@ type xmlmcSettingResponse struct {
 			Value string `json:"value"`
 		} `json:"option"`
 	} `json:"params"`
-	State stateJSONStruct `json:"state"`
+	State        stateJSONStruct `json:"state"`
+	MethodResult bool            `json:"@status"`
 }
 
 // Flags List
@@ -501,11 +502,11 @@ type stateJSONStruct struct {
 	Error     string `json:"error"`
 }
 type xmlmcResponse struct {
-	MethodResult string          `json:"status,attr"`
+	MethodResult string          `json:"status"`
 	State        stateJSONStruct `json:"state"`
 }
 type xmlmcLicenseInfo struct {
-	MethodResult string `json:"status,attr"`
+	MethodResult string `json:"status"`
 	Params       struct {
 		ServerBuild int
 	} `json:"params"`

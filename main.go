@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -65,6 +66,13 @@ func main() {
 
 	//Get instance server build
 	getServerBuild()
+
+	//Sort out maximum page size
+	sysSettingPageSize, _ := strconv.Atoi(sysOptionGet("api.xmlmc.queryExec.maxResultsAllowed"))
+	if ldapImportConf.Advanced.PageSize < sysSettingPageSize {
+		ldapImportConf.Advanced.PageSize = sysSettingPageSize
+		logger(0, "[MESSAGE] Overridden Page Size "+fmt.Sprintf("%d", ldapImportConf.Advanced.PageSize), true)
+	}
 
 	//-- Start Import
 	logged := startImportHistory()
@@ -287,7 +295,7 @@ func loadConfig() ldapImportConfStruct {
 	}
 
 	logger(0, "[MESSAGE] Log Level "+fmt.Sprintf("%d", eldapConf.Advanced.LogLevel)+"", true)
-	logger(0, "[MESSAGE] Page Size "+fmt.Sprintf("%d", eldapConf.Advanced.PageSize)+"\n", true)
+	logger(0, "[MESSAGE] Import Defined Page Size "+fmt.Sprintf("%d", eldapConf.Advanced.PageSize), true)
 	if eldapConf.User.Operation == "" {
 		eldapConf.User.Operation = "Both"
 	}

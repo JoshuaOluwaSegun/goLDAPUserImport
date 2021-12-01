@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.10.0
+
+Change:
+
+- Improved performance when caching user account groups
+
 ## 3.9.6
 
 Change:
@@ -12,7 +18,7 @@ Change:
 
 - Rebuilt using latest version of goApiLib, to fix possible issue with connections via a proxy
 
-## 3.9.4
+## 3.9.4
 
 Fixed:
 
