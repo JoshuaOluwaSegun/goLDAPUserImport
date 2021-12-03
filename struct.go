@@ -411,14 +411,14 @@ type userAccountStruct struct {
 	HHomeTelephoneNumber string `json:"h_home_telephone_number"`
 	HHomeAddress         string `json:"h_home_address"`
 	HBlog                string `json:"h_blog"`
-	HAttrib1             string `json:"h_attrib_1"`
-	HAttrib2             string `json:"h_attrib_2"`
-	HAttrib3             string `json:"h_attrib_3"`
-	HAttrib4             string `json:"h_attrib_4"`
-	HAttrib5             string `json:"h_attrib_5"`
-	HAttrib6             string `json:"h_attrib_6"`
-	HAttrib7             string `json:"h_attrib_7"`
-	HAttrib8             string `json:"h_attrib_8"`
+	HAttrib1             string `json:"h_attrib1"`
+	HAttrib2             string `json:"h_attrib2"`
+	HAttrib3             string `json:"h_attrib3"`
+	HAttrib4             string `json:"h_attrib4"`
+	HAttrib5             string `json:"h_attrib5"`
+	HAttrib6             string `json:"h_attrib6"`
+	HAttrib7             string `json:"h_attrib7"`
+	HAttrib8             string `json:"h_attrib8"`
 	HHomeOrg             string `json:"h_home_organization"`
 }
 type xmlmcUserRolesListResponse struct {

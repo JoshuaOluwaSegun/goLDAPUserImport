@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.11.0
+
+Fix:
+
+- Issue with attributes not comparing correctly
+
 ## 3.10.0
 
 Change:
