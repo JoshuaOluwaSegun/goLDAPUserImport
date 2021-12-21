@@ -8,7 +8,7 @@ import (
 )
 
 //----- Constants -----
-const version = "3.11.0"
+const version = "3.12.0"
 const appName = "goLDAPUserImport"
 const applicationName = "LDAP Import Utility"
 const execName = "ldap_user_import"

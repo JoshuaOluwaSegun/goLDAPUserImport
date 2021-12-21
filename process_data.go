@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
-	_ "github.com/bwmarrin/go-objectsid"
+	"github.com/bwmarrin/go-objectsid"
 	"github.com/hornbill/ldap"
 	"strconv"
 	"strings"

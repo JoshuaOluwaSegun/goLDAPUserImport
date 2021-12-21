@@ -12,7 +12,7 @@
 # Installation
 
 #### Windows
-* Download the [x64 Binary](https://github.com/hornbill/goLDAPUserImport/releases/download/v3.11.0/ldap_user_import_win_x64_v3_11_0.zip) or [x86 Binary](https://github.com/hornbill/goLDAPUserImport/releases/download/v3.11.0/ldap_user_import_win_x86_v3_11_0.zip)
+* Download the [x64 Binary](https://github.com/hornbill/goLDAPUserImport/releases/download/v3.12.0/ldap_user_import_win_x64_v3_12_0.zip) or [x86 Binary](https://github.com/hornbill/goLDAPUserImport/releases/download/v3.12.0/ldap_user_import_win_x86_v3_12_0.zip)
 * Extract zip into a folder you would like the application to run from e.g. `C:\LDAP_Import\`
 * Configure the Import in Hornbill Administration Tool [See Here](https://wiki.hornbill.com/index.php/LDAP_User_Import)
 * Open Command Line Prompt as Administrator
