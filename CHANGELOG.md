@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.12.0
+
+Change:
+
+- Added ability to "calculate" objectGUID - needs option in LDAP Import Configuration
+
 ## 3.11.0
 
 Fix:
@@ -24,7 +30,7 @@ Change:
 
 - Rebuilt using latest version of goApiLib, to fix possible issue with connections via a proxy
 
-##Â 3.9.4
+## 3.9.4
 
 Fixed:
 

@@ -3,12 +3,11 @@ package main
 import (
 	"encoding/base64"
 	"fmt"
+	_ "github.com/bwmarrin/go-objectsid"
+	"github.com/hornbill/ldap"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/bwmarrin/go-objectsid"
-	"github.com/hornbill/ldap"
 )
 
 //-- Store LDAP Usres in Map
@@ -24,6 +23,7 @@ func processLDAPUsers() {
 	for user := range ldapUsers {
 		// Process Pre Import Actions
 		var userID = processImportActions(ldapUsers[user])
+
 		// Process Params and return userId
 		processUserParams(ldapUsers[user], userID)
 		if userID != "" {
@@ -37,7 +37,6 @@ func processLDAPUsers() {
 }
 func processData() {
 	logger(1, "Processing User Data", true)
-
 	for user := range HornbillCache.UsersWorking {
 
 		currentUser := HornbillCache.UsersWorking[user]
@@ -54,7 +53,7 @@ func processData() {
 			logger(4, "LDAP Record Has no User ID: '"+fmt.Sprintf("%+v", currentUser.LDAP)+"'\n", false)
 			continue
 		}
-		//-- Check Map no need to loop
+
 		//-- Check Map no need to loop
 		userExists := false
 		if strings.ToLower(hornbillUserData.HUserID) == userID {
@@ -680,6 +679,17 @@ func processImportActions(l *ldap.Entry) string {
 			}
 			data.Custom["{"+action.Output+"}"] = Outcome
 			logger(1, "SIDConversion Output: "+Outcome, false)
+		case "GUIDConversion":
+			//-- Grab value from LDAP
+			Outcome := processComplexField(l, action.Value)
+			//-- Grab Value from Existing Custom Field
+			Outcome = processImportAction(data.Custom, Outcome)
+			if Outcome != "" {
+				//-- Run Replace
+				Outcome = convertToGUID([]byte(Outcome))
+			}
+			data.Custom["{"+action.Output+"}"] = Outcome
+			logger(1, "SIDConversion Output: "+Outcome, false)
 		case "None":
 			//-- Grab value
 			Outcome := processComplexField(l, action.Value)
@@ -761,4 +771,33 @@ func processUserParams(l *ldap.Entry, userID string) {
 	data.Profile.Attrib6 = getProfileFieldValue(l, "Attrib6", data.Custom)
 	data.Profile.Attrib7 = getProfileFieldValue(l, "Attrib7", data.Custom)
 	data.Profile.Attrib8 = getProfileFieldValue(l, "Attrib8", data.Custom)
+}
+
+func convertToGUID(objectGUID []byte) string {
+	if len(objectGUID) < 16 {
+		return ""
+	}
+	output := ""
+	output += fmt.Sprintf("%02X", int64(objectGUID[3]&0xFF))
+	output += fmt.Sprintf("%02X", int64(objectGUID[2]&0xFF))
+	output += fmt.Sprintf("%02X", int64(objectGUID[1]&0xFF))
+	output += fmt.Sprintf("%02X", int64(objectGUID[0]&0xFF))
+	output += "-"
+	output += fmt.Sprintf("%02X", int64(objectGUID[5]&0xFF))
+	output += fmt.Sprintf("%02X", int64(objectGUID[4]&0xFF))
+	output += "-"
+	output += fmt.Sprintf("%02X", int64(objectGUID[7]&0xFF))
+	output += fmt.Sprintf("%02X", int64(objectGUID[6]&0xFF))
+	output += "-"
+	output += fmt.Sprintf("%02X", int64(objectGUID[8]&0xFF))
+	output += fmt.Sprintf("%02X", int64(objectGUID[9]&0xFF))
+	output += "-"
+	output += fmt.Sprintf("%02X", int64(objectGUID[10]&0xFF))
+	output += fmt.Sprintf("%02X", int64(objectGUID[11]&0xFF))
+	output += fmt.Sprintf("%02X", int64(objectGUID[12]&0xFF))
+	output += fmt.Sprintf("%02X", int64(objectGUID[13]&0xFF))
+	output += fmt.Sprintf("%02X", int64(objectGUID[14]&0xFF))
+	output += fmt.Sprintf("%02X", int64(objectGUID[15]&0xFF))
+
+	return output
 }
