@@ -22,7 +22,7 @@ import (
 func processRegexOnString(reg string, input string) string {
 	re1, err := regexp.Compile(reg)
 	if err != nil {
-		logger(4, "Regex Error: "+fmt.Sprintf("%v", err), false)
+		logger(4, "Regex Error: "+err.Error(), false)
 		return ""
 	}
 	//-- Get Array of all Matched max 100
@@ -30,7 +30,6 @@ func processRegexOnString(reg string, input string) string {
 	strReturn := ""
 	//-- Loop Matches
 	for _, match := range result {
-		//fmt.Printf("match: %s \n", match)
 		strReturn = match
 
 		if strReturn != "" {
@@ -51,7 +50,7 @@ func getUserFieldValue(u *ldap.Entry, s string, custom map[string]string) string
 	return stringToReturn
 }
 
-//-- Get XMLMC Field from mapping via profile Object
+// -- Get XMLMC Field from mapping via profile Object
 func getProfileFieldValue(u *ldap.Entry, s string, custom map[string]string) string {
 	//-- Dyniamicly Grab Mapped Value
 	r := reflect.ValueOf(ldapImportConf.User.ProfileMapping)
@@ -65,12 +64,12 @@ func getProfileFieldValue(u *ldap.Entry, s string, custom map[string]string) str
 	return stringToReturn
 }
 
-//-- Match any value wrapped in [] and get its LDAP Attribute Value
+// -- Match any value wrapped in [] and get its LDAP Attribute Value
 func processComplexField(u *ldap.Entry, s string) string {
 	//-- Match $variables from String
 	re1, err := regexp.Compile(`\[(.*?)\]`)
 	if err != nil {
-		logger(4, "Regex Error: "+fmt.Sprintf("%v", err), false)
+		logger(4, "Regex Error: "+err.Error(), false)
 		return ""
 	}
 	//-- Get Array of all Matched max 100
@@ -96,12 +95,12 @@ func processComplexField(u *ldap.Entry, s string) string {
 	return s
 }
 
-//-- Match Any value wrapped in {} and get its Import Action Value
+// -- Match Any value wrapped in {} and get its Import Action Value
 func processImportAction(u map[string]string, s string) string {
 	//-- Match $variables from String
 	re1, err := regexp.Compile(`\{(.*?)\}`)
 	if err != nil {
-		logger(4, "Regex Error: "+fmt.Sprintf("%v", err), false)
+		logger(4, "Regex Error: "+err.Error(), false)
 		return ""
 	}
 	//-- Get Array of all Matched max 100
@@ -132,7 +131,7 @@ func processImportAction(u map[string]string, s string) string {
 	return s
 }
 
-//-- Generate Password String
+// -- Generate Password String
 func generatePasswordString(importData *userWorkingDataStruct) string {
 	pwdinst := hornbillpasswordgen.NewPasswordInstance()
 	pwdinst.Length = passwordProfile.Length
@@ -155,7 +154,7 @@ func generatePasswordString(importData *userWorkingDataStruct) string {
 	newPassword, _, err := pwdinst.GenPassword()
 
 	if err != nil {
-		logger(4, "Failed Password Auto Generation for: "+importData.Account.UserID+"  "+fmt.Sprintf("%v", err), false)
+		logger(4, "Failed Password Auto Generation for: "+importData.Account.UserID+"  "+err.Error(), false)
 		return ""
 	}
 	return newPassword
@@ -181,6 +180,7 @@ func loggerGen(t int, s string) string {
 	}
 	return errorLogPrefix + s + "\n\r"
 }
+
 func loggerWriteBuffer(s string) {
 	if s != "" {
 		logLines := strings.Split(s, "\n\r")
@@ -223,7 +223,7 @@ func runLogRetentionCheck() {
 
 }
 
-//-- Loggin function
+// -- Loggin function
 func logger(t int, s string, outputtoCLI bool) {
 
 	//-- Ignore Logging level unless is 0
@@ -234,11 +234,8 @@ func logger(t int, s string, outputtoCLI bool) {
 	defer mutexLog.Unlock()
 
 	onceLog.Do(func() {
-		//-- Curreny WD
 		cwd, _ := os.Getwd()
-		//-- Log Folder
 		logPath := cwd + "/log"
-		//-- Log File
 		logFileName := logPath + "/" + Flags.configLogPrefix + "LDAP_User_Import_" + Time.timeNow + ".log"
 		//-- If Folder Does Not Exist then create it
 		if _, err := os.Stat(logPath); os.IsNotExist(err) {
@@ -259,8 +256,7 @@ func logger(t int, s string, outputtoCLI bool) {
 		log.SetOutput(f)
 
 	})
-	// don't forget to close it
-	//defer f.Close()
+
 	red := color.New(color.FgRed).PrintfFunc()
 	orange := color.New(color.FgCyan).PrintfFunc()
 	var errorLogPrefix = ""
@@ -310,12 +306,12 @@ func startImportHistory() bool {
 	RespBody, xmlmcErr := loggerAPI.Invoke("data", "entityAddRecord")
 	var JSONResp xmlmcHistoryResponse
 	if xmlmcErr != nil {
-		logger(4, "Unable to write Import History: "+fmt.Sprintf("%s", xmlmcErr), true)
+		logger(4, "Unable to write Import History: "+xmlmcErr.Error(), true)
 		return false
 	}
 	err := json.Unmarshal([]byte(RespBody), &JSONResp)
 	if err != nil {
-		logger(4, "Unable to write Import History: "+fmt.Sprintf("%s", err), true)
+		logger(4, "Unable to write Import History: "+err.Error(), true)
 		return false
 	}
 	if JSONResp.State.Error != "" {
@@ -368,12 +364,12 @@ func completeImportHistory() bool {
 	RespBody, xmlmcErr := loggerAPI.Invoke("data", "entityUpdateRecord")
 	var JSONResp xmlmcHistoryResponse
 	if xmlmcErr != nil {
-		logger(4, "Unable to write Import History: "+fmt.Sprintf("%s", xmlmcErr), true)
+		logger(4, "Unable to write Import History: "+xmlmcErr.Error(), true)
 		return false
 	}
 	err := json.Unmarshal([]byte(RespBody), &JSONResp)
 	if err != nil {
-		logger(4, "Unable to write Import History: "+fmt.Sprintf("%s", err), true)
+		logger(4, "Unable to write Import History: "+err.Error(), true)
 		return false
 	}
 	if JSONResp.State.Error != "" {
@@ -407,12 +403,12 @@ func getLastHistory() {
 	RespBody, xmlmcErr := loggerAPI.Invoke("data", "queryExec")
 	var JSONResp xmlmcHistoryItemResponse
 	if xmlmcErr != nil {
-		logger(4, "Unable to Query Import History: "+fmt.Sprintf("%s", xmlmcErr), true)
+		logger(4, "Unable to Query Import History: "+xmlmcErr.Error(), true)
 		return
 	}
 	err := json.Unmarshal([]byte(RespBody), &JSONResp)
 	if err != nil {
-		logger(4, "Unable to Query Import History: "+fmt.Sprintf("%s", err), true)
+		logger(4, "Unable to Query Import History: "+err.Error(), true)
 		return
 	}
 	if JSONResp.State.Error != "" {
@@ -430,37 +426,7 @@ func getLastHistory() {
 
 }
 
-func getServerBuild() {
-	loggerAPI = apiLib.NewXmlmcInstance(Flags.configInstanceID)
-	loggerAPI.SetAPIKey(Flags.configAPIKey)
-	loggerAPI.SetTimeout(Flags.configAPITimeout)
-	loggerAPI.SetJSONResponse(true)
-	RespBody, xmlmcErr := loggerAPI.Invoke("session", "getSystemLicenseInfo")
-
-	var JSONResp xmlmcLicenseInfo
-	if xmlmcErr != nil {
-		logger(4, "Unable to Query Server Build: "+fmt.Sprintf("%s", xmlmcErr), true)
-		return
-	}
-	err := json.Unmarshal([]byte(RespBody), &JSONResp)
-	if err != nil {
-		logger(4, "Unable to Query Server Build: "+fmt.Sprintf("%s", err), true)
-		return
-	}
-	if JSONResp.State.Error != "" {
-		logger(4, "Unable to Query Server Build: "+JSONResp.State.Error, true)
-		return
-	}
-
-	if JSONResp.Params.ServerBuild > 0 {
-		serverBuild = JSONResp.Params.ServerBuild
-	} else {
-		logger(4, "Server build not returned", true)
-	}
-
-}
-
-//sysOptionGet - gets and returns sys setting value
+// sysOptionGet - gets and returns sys setting value
 func sysOptionGet(sysOption string) (optionValue string) {
 	loggerAPI.SetParam("filter", sysOption)
 	response, err := loggerAPI.Invoke("admin", "sysOptionGet")

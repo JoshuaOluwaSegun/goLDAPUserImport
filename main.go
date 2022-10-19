@@ -12,13 +12,9 @@ import (
 	"sync"
 	"time"
 
-	//-- CLI Colour
-
-	//-- Hornbill Clone of "github.com/mavricknz/ldap"
-	//--Hornbil Clone of "github.com/cheggaaa/pb"
-
+	"github.com/blang/semver"
 	apiLib "github.com/hornbill/goApiLib"
-	"github.com/tcnksm/go-latest" //-- For Version checking
+	"github.com/rhysd/go-github-selfupdate/selfupdate"
 )
 
 var (
@@ -33,9 +29,7 @@ func main() {
 	//-- Start Time for Durration
 	Time.startTime = time.Now()
 	//-- Start Time for Log File
-	Time.timeNow = time.Now().Format(time.RFC3339)
-	//-- Remove :
-	Time.timeNow = strings.Replace(Time.timeNow, ":", "-", -1)
+	Time.timeNow = Time.startTime.Format("20060102150405")
 
 	//-- Process Flags
 	procFlags()
@@ -46,8 +40,8 @@ func main() {
 		return
 	}
 
-	//-- Check for latest
-	checkVersion()
+	//Check version of utility, self-update if appropriate
+	doSelfUpdate()
 
 	//-- Load Configuration File Into Struct
 	ldapImportConf = loadConfig()
@@ -57,15 +51,13 @@ func main() {
 
 	//-- Check for Error
 	if configError != nil {
-		logger(4, fmt.Sprintf("%v", configError), true)
+		logger(4, configError.Error(), true)
 		logger(4, "Please Check your Configuration: "+Flags.configID, true)
 		return
 	}
+
 	//-- Check import not already running
 	getLastHistory()
-
-	//Get instance server build
-	getServerBuild()
 
 	//Sort out maximum page size
 	sysSettingPageSize, _ := strconv.Atoi(sysOptionGet("api.xmlmc.queryExec.maxResultsAllowed"))
@@ -122,7 +114,7 @@ func main() {
 	outputEnd()
 }
 
-//-- Process Input Flags
+// -- Process Input Flags
 func procFlags() {
 	//-- Grab Flags
 	flag.StringVar(&Flags.configID, "config", "", "Id of Configuration To Load From Hornbill")
@@ -152,14 +144,13 @@ func procFlags() {
 	}
 }
 
-//-- Generate Output
+// -- Generate Output
 func outputEnd() {
 	logger(2, "Import Complete", true)
 	//-- End output
 	if counters.errors > 0 {
 		logger(4, "One or more errors encountered please check the log file", true)
 		logger(4, "Error Count: "+fmt.Sprintf("%d", counters.errors), true)
-		//logger(4, "Check Log File for Details", true)
 	}
 	logger(2, "Accounts Processed: "+fmt.Sprintf("%d", len(HornbillCache.UsersWorking)), true)
 	logger(2, "Created: "+fmt.Sprintf("%d", counters.created), true)
@@ -189,24 +180,7 @@ func outputEnd() {
 	logger(2, "---- XMLMC LDAP Import Complete ---- ", true)
 }
 
-//-- Check Latest
-func checkVersion() {
-	githubTag := &latest.GithubTag{
-		Owner:      "hornbill",
-		Repository: appName,
-	}
-
-	res, err := latest.Check(githubTag, version)
-	if err != nil {
-		logger(4, "Unable to check utility version against Github repository: "+err.Error(), true)
-		return
-	}
-	if res.Outdated {
-		logger(3, version+" is not latest, you should upgrade to "+res.Current+" by downloading the latest package Here https://github.com/hornbill/goLDAPUserImport/releases/tag/v"+res.Current, true)
-	}
-}
-
-//-- Function to Load Configruation File
+// -- Function to Load Configruation File
 func loadConfig() ldapImportConfStruct {
 
 	if Flags.configInstanceID == "" {
@@ -243,16 +217,16 @@ func loadConfig() ldapImportConfStruct {
 	RespBody, xmlmcErr := mc.Invoke("data", "entityGetRecord")
 	var JSONResp xmlmcConfigLoadResponse
 	if xmlmcErr != nil {
-		logger(4, "Error Loading Configuration: "+fmt.Sprintf("%v", xmlmcErr), true)
+		logger(4, "Error Loading Configuration: "+xmlmcErr.Error(), true)
 		os.Exit(107)
 	}
 	err := json.Unmarshal([]byte(RespBody), &JSONResp)
 	if err != nil {
-		logger(4, "Error Loading Configuration: "+fmt.Sprintf("%v", err), true)
+		logger(4, "Error Loading Configuration: "+err.Error(), true)
 		os.Exit(107)
 	}
 	if JSONResp.State.Error != "" {
-		logger(4, "Error Loading Configuration: "+fmt.Sprintf("%v", JSONResp.State.Error), true)
+		logger(4, "Error Loading Configuration: "+JSONResp.State.Error, true)
 		os.Exit(107)
 	}
 
@@ -261,7 +235,7 @@ func loadConfig() ldapImportConfStruct {
 
 	err = json.Unmarshal([]byte(JSONResp.Params.PrimaryEntityData.Record.HDefinition), &eldapConf)
 	if err != nil {
-		logger(4, "Error Decoding Configuration: "+fmt.Sprintf("%v", err), true)
+		logger(4, "Error Decoding Configuration: "+err.Error(), true)
 		os.Exit(106)
 	}
 
@@ -279,19 +253,19 @@ func loadConfig() ldapImportConfStruct {
 	RespBody, xmlmcErr = mc.Invoke("admin", "keysafeGetKey")
 	var JSONKeyResp xmlmcKeySafeResponse
 	if xmlmcErr != nil {
-		logger(4, "Error LDAP Authentication: "+fmt.Sprintf("%v", xmlmcErr), true)
+		logger(4, "Error LDAP Authentication: "+xmlmcErr.Error(), true)
 	}
 	err = json.Unmarshal([]byte(RespBody), &JSONKeyResp)
 	if err != nil {
-		logger(4, "Error LDAP Authentication: "+fmt.Sprintf("%v", err), true)
+		logger(4, "Error LDAP Authentication: "+err.Error(), true)
 	}
 	if JSONKeyResp.State.Error != "" {
-		logger(4, "Error Loading LDAP Authentication: "+fmt.Sprintf("%v", JSONKeyResp.State.Error), true)
+		logger(4, "Error Loading LDAP Authentication: "+JSONKeyResp.State.Error, true)
 	}
 
 	err = json.Unmarshal([]byte(JSONKeyResp.Params.Data), &ldapServerAuth)
 	if err != nil {
-		logger(4, "Error Decoding LDAP Server Authentication: "+fmt.Sprintf("%v", err), true)
+		logger(4, "Error Decoding LDAP Server Authentication: "+err.Error(), true)
 	}
 
 	logger(0, "[MESSAGE] Log Level "+fmt.Sprintf("%d", eldapConf.Advanced.LogLevel)+"", true)
@@ -304,14 +278,11 @@ func loadConfig() ldapImportConfStruct {
 }
 
 func validateConf() error {
-
 	//-- Check LDAP Sever Connection type
 	if ldapImportConf.LDAP.Server.ConnectionType != "" && ldapImportConf.LDAP.Server.ConnectionType != "SSL" && ldapImportConf.LDAP.Server.ConnectionType != "TLS" {
 		err := errors.New("Invalid ConnectionType: '" + ldapImportConf.LDAP.Server.ConnectionType + "' Should be either '' or 'TLS' or 'SSL'")
 		return err
 	}
-	//-- Process Config File
-
 	return nil
 }
 
@@ -339,4 +310,57 @@ func CounterInc(counter int) {
 		counters.statusUpdated++
 	}
 	mutexCounters.Unlock()
+}
+
+func doSelfUpdate() {
+	v := semver.MustParse(version)
+	latest, found, err := selfupdate.DetectLatest(repo)
+	if err != nil {
+		logger(5, "Error occurred while detecting version: "+err.Error(), true)
+		return
+	}
+	if !found {
+		logger(5, "Could not find Github repo: "+repo, true)
+		return
+	}
+
+	latestMajorVersion := strings.Split(fmt.Sprintf("%v", latest.Version), ".")[0]
+	latestMinorVersion := strings.Split(fmt.Sprintf("%v", latest.Version), ".")[1]
+	latestPatchVersion := strings.Split(fmt.Sprintf("%v", latest.Version), ".")[2]
+
+	currentMajorVersion := strings.Split(version, ".")[0]
+	currentMinorVersion := strings.Split(version, ".")[1]
+	currentPatchVersion := strings.Split(version, ".")[2]
+
+	//Useful in dev, customers should never see current version > latest release version
+	if currentMajorVersion > latestMajorVersion {
+		logger(3, "Current version "+version+" (major) is greater than the latest release version on Github "+fmt.Sprintf("%v", latest.Version), true)
+		return
+	} else {
+		if currentMinorVersion > latestMinorVersion {
+			logger(3, "Current version "+version+" (minor) is greater than the latest release version on Github "+fmt.Sprintf("%v", latest.Version), true)
+			return
+		} else if currentPatchVersion > latestPatchVersion {
+			logger(3, "Current version "+version+" (patch) is greater than the latest release version on Github "+fmt.Sprintf("%v", latest.Version), true)
+			return
+		}
+	}
+	if latestMajorVersion > currentMajorVersion {
+		msg := "v" + version + " is not latest, you should upgrade to " + fmt.Sprintf("%v", latest.Version) + " by downloading the latest package from: https://github.com/" + repo + "/releases/latest"
+		logger(5, msg, true)
+		return
+	}
+
+	_, err = selfupdate.UpdateSelf(v, repo)
+	if err != nil {
+		logger(5, "Binary update failed: "+err.Error(), true)
+		return
+	}
+	if latest.Version.Equals(v) {
+		// latest version is the same as current version. It means current binary is up to date.
+		logger(3, "Current binary is the latest version: "+version, true)
+	} else {
+		logger(3, "Successfully updated to version: "+fmt.Sprintf("%v", latest.Version), true)
+		logger(3, "Release notes:\n"+latest.ReleaseNotes, true)
+	}
 }

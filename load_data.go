@@ -18,7 +18,6 @@ var (
 )
 
 func initXMLMC() {
-
 	hornbillImport = apiLib.NewXmlmcInstance(Flags.configInstanceID)
 	hornbillImport.SetAPIKey(Flags.configAPIKey)
 	hornbillImport.SetTimeout(Flags.configAPITimeout)
@@ -113,7 +112,7 @@ func loadUserGroups() {
 	logger(1, "User Orgs Loaded: "+fmt.Sprintf("%d", userAccountRecordCount)+"\n", false)
 }
 
-//-- Check so that only data that relates to users in the LDAP data set are stored in the working set
+// -- Check so that only data that relates to users in the LDAP data set are stored in the working set
 func userIDExistsInLDAP(userID string) bool {
 	userID = strings.ToLower(userID)
 	_, present := HornbillCache.UsersWorking[userID]
@@ -145,12 +144,12 @@ func getUserAccountsGroupsList(count uint64) (recordCount int64) {
 
 		var JSONResp xmlmcUserGroupListResponse
 		if xmlmcErr != nil {
-			logger(4, "Unable to Query Accounts Orgs List "+fmt.Sprintf("%s", xmlmcErr), false)
+			logger(4, "Unable to Query Accounts Orgs List "+xmlmcErr.Error(), false)
 			break
 		}
 		err := json.Unmarshal([]byte(RespBody), &JSONResp)
 		if err != nil {
-			logger(4, "Unable to Query Accounts Orgs  List "+fmt.Sprintf("%s", err), false)
+			logger(4, "Unable to Query Accounts Orgs  List "+err.Error(), false)
 			break
 		}
 		if JSONResp.State.Error != "" {
@@ -198,12 +197,12 @@ func getGroupsList(count uint64) {
 
 		var JSONResp xmlmcGroupListResponse
 		if xmlmcErr != nil {
-			logger(4, "Unable to Query Orgs List "+fmt.Sprintf("%s", xmlmcErr), false)
+			logger(4, "Unable to Query Orgs List "+xmlmcErr.Error(), false)
 			break
 		}
 		err := json.Unmarshal([]byte(RespBody), &JSONResp)
 		if err != nil {
-			logger(4, "Unable to Query Orgs List "+fmt.Sprintf("%s", err), false)
+			logger(4, "Unable to Query Orgs List "+err.Error(), false)
 			break
 		}
 		if JSONResp.State.Error != "" {
@@ -254,12 +253,12 @@ func getUserAccountsRolesList(count uint64) {
 
 		var JSONResp xmlmcUserRolesListResponse
 		if xmlmcErr != nil {
-			logger(4, "Unable to Query Accounts Roles List "+fmt.Sprintf("%s", xmlmcErr), false)
+			logger(4, "Unable to Query Accounts Roles List "+xmlmcErr.Error(), false)
 			break
 		}
 		err := json.Unmarshal([]byte(RespBody), &JSONResp)
 		if err != nil {
-			logger(4, "Unable to Query Accounts Roles  List "+fmt.Sprintf("%s", err), false)
+			logger(4, "Unable to Query Accounts Roles  List "+err.Error(), false)
 			break
 		}
 		if JSONResp.State.Error != "" {
@@ -302,12 +301,12 @@ func getUserAccountList(count uint64) {
 
 		var JSONResp xmlmcUserListResponse
 		if xmlmcErr != nil {
-			logger(4, "Unable to Query Accounts List "+fmt.Sprintf("%s", xmlmcErr), false)
+			logger(4, "Unable to Query Accounts List "+xmlmcErr.Error(), false)
 			break
 		}
 		err := json.Unmarshal([]byte(RespBody), &JSONResp)
 		if err != nil {
-			logger(4, "Unable to Query Accounts List "+fmt.Sprintf("%s", err), false)
+			logger(4, "Unable to Query Accounts List "+err.Error(), false)
 			break
 		}
 		if JSONResp.State.Error != "" {
@@ -321,7 +320,7 @@ func getUserAccountList(count uint64) {
 			HornbillCache.Users[strings.ToLower(JSONResp.Params.RowData.Row[index].HUserID)] = JSONResp.Params.RowData.Row[index]
 		}
 
-		// Add 100
+		// Add pageSize
 		loopCount += uint64(pageSize)
 		bar.Add(len(JSONResp.Params.RowData.Row))
 		//-- Check for empty result set
@@ -351,12 +350,12 @@ func getSitesList(count uint64) {
 
 		var JSONResp xmlmcSiteListResponse
 		if xmlmcErr != nil {
-			logger(4, "Unable to Query Site List "+fmt.Sprintf("%s", xmlmcErr), false)
+			logger(4, "Unable to Query Site List "+xmlmcErr.Error(), false)
 			break
 		}
 		err := json.Unmarshal([]byte(RespBody), &JSONResp)
 		if err != nil {
-			logger(4, "Unable to Query Site List "+fmt.Sprintf("%s", err), false)
+			logger(4, "Unable to Query Site List "+err.Error(), false)
 			break
 		}
 		if JSONResp.State.Error != "" {
@@ -368,7 +367,7 @@ func getSitesList(count uint64) {
 		for index := range JSONResp.Params.RowData.Row {
 			HornbillCache.Sites[strings.ToLower(JSONResp.Params.RowData.Row[index].HSiteName)] = JSONResp.Params.RowData.Row[index]
 		}
-		// Add 100
+		// Add pageSize
 		loopCount += uint64(pageSize)
 		bar.Add(len(JSONResp.Params.RowData.Row))
 		//-- Check for empty result set
@@ -380,7 +379,6 @@ func getSitesList(count uint64) {
 
 }
 func getCount(query string) uint64 {
-
 	hornbillImport.SetParam("application", "com.hornbill.core")
 	hornbillImport.SetParam("queryName", query)
 	hornbillImport.OpenElement("queryParams")
@@ -409,7 +407,6 @@ func getCount(query string) uint64 {
 
 	//-- return Count
 	count, errC := strconv.ParseUint(JSONResp.Params.RowData.Row[0].Count, 10, 64)
-	//-- Check for Error
 	if errC != nil {
 		logger(4, "Unable to get Count for Query ["+query+"] "+errC.Error(), false)
 		logger(1, RespBody, false)
@@ -418,7 +415,7 @@ func getCount(query string) uint64 {
 	return count
 }
 
-//getPasswordProfile - retrieves the user password profile settings from your Hornbill instance, applies ready for the password generator to use
+// getPasswordProfile - retrieves the user password profile settings from your Hornbill instance, applies ready for the password generator to use
 func getPasswordProfile() {
 	mc := apiLib.NewXmlmcInstance(Flags.configInstanceID)
 	mc.SetAPIKey(Flags.configAPIKey)
@@ -428,12 +425,12 @@ func getPasswordProfile() {
 	RespBody, xmlmcErr := mc.Invoke("admin", "sysOptionGet")
 	var JSONResp xmlmcSettingResponse
 	if xmlmcErr != nil {
-		logger(4, "Unable to run sysOptionGet "+fmt.Sprintf("%s", xmlmcErr), false)
+		logger(4, "Unable to run sysOptionGet "+xmlmcErr.Error(), false)
 		return
 	}
 	err := json.Unmarshal([]byte(RespBody), &JSONResp)
 	if err != nil {
-		logger(4, "Unable to unmarshal sysOptionGet response "+fmt.Sprintf("%s", err), false)
+		logger(4, "Unable to unmarshal sysOptionGet response "+err.Error(), false)
 		return
 	}
 	if JSONResp.State.Error != "" {
@@ -464,7 +461,6 @@ func getPasswordProfile() {
 			passwordProfile.ForceUpper, _ = strconv.Atoi(val.Value)
 		}
 	}
-
 }
 
 func processBlacklists() []string {
@@ -503,7 +499,7 @@ func getBlacklist(blacklistURL string) []string {
 
 	scanner := bufio.NewScanner(response.Body)
 	if err := scanner.Err(); err != nil {
-		logger(4, "Unable to decode blacklist from "+blacklistURL+": "+fmt.Sprintf("%v", err), false)
+		logger(4, "Unable to decode blacklist from "+blacklistURL+": "+err.Error(), false)
 		return blacklist
 	}
 	for scanner.Scan() {
@@ -514,6 +510,5 @@ func getBlacklist(blacklistURL string) []string {
 			blacklist = append(blacklist, trimmedRow)
 		}
 	}
-
 	return blacklist
 }

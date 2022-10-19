@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-//-- Function to search for site
+// -- Function to search for site
 func getSiteFromLookup(importData *userWorkingDataStruct) string {
 	//-- Check if Site Attribute is set
 	if ldapImportConf.User.Site.Value == "" {
@@ -29,7 +29,7 @@ func getSiteFromLookup(importData *userWorkingDataStruct) string {
 	return ""
 }
 
-//-- Function to Check if in Cache
+// -- Function to Check if in Cache
 func siteInCache(siteName string) (bool, string) {
 	//-- Check if in Cache
 	_, found := HornbillCache.Sites[strings.ToLower(siteName)]

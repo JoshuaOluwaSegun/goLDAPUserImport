@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 3.13.0
+
+Changes:
+
+- Replaced references to deprecated ioutil module with io module
+- Added support to clear User Account, User Profile and User Image values using __clear__
+- Added auto-update functionality for minor & patch version changes
+- General tidy up
+
+Fix:
+
+- Issue where changes to Social Network fields E & F would not trigger a user profile update
+
 ## 3.12.0
 
 Change:
@@ -30,7 +43,7 @@ Change:
 
 - Rebuilt using latest version of goApiLib, to fix possible issue with connections via a proxy
 
-## 3.9.4
+##ï¿½3.9.4
 
 Fixed:
 

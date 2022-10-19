@@ -43,14 +43,14 @@ func connectLDAP() *ldap.LDAPConnection {
 	return nil
 }
 
-//-- Query LDAP
+// -- Query LDAP
 func queryLdap() bool {
 	logger(1, "Query LDAP For Users", true)
 	//-- Create LDAP Connection
 	l := connectLDAP()
 	conErr := l.Connect()
 	if conErr != nil {
-		logger(4, "Connecting Error: "+fmt.Sprintf("%v", conErr), true)
+		logger(4, "Connecting Error: "+conErr.Error(), true)
 		return false
 	}
 	defer l.Close()
@@ -58,7 +58,7 @@ func queryLdap() bool {
 	//-- Bind
 	bindErr := l.Bind(ldapServerAuth.UserName, ldapServerAuth.Password)
 	if bindErr != nil {
-		logger(4, "Bind Error: "+fmt.Sprintf("%v", bindErr), true)
+		logger(4, "Bind Error: "+bindErr.Error(), true)
 		return false
 	}
 	if ldapImportConf.LDAP.Server.Debug {
@@ -79,7 +79,7 @@ func queryLdap() bool {
 	//-- Search Request with 1000 limit pagaing
 	results, searchErr := l.SearchWithPaging(searchRequest, 1000)
 	if searchErr != nil {
-		logger(4, "Search Error: "+fmt.Sprintf("%v", searchErr), true)
+		logger(4, "Search Error: "+searchErr.Error(), true)
 		return false
 	}
 

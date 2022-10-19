@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 )
@@ -11,6 +10,9 @@ func getManager(importData *userWorkingDataStruct, currentData userAccountStruct
 	if ldapImportConf.User.Manager.Value == "" {
 		logger(4, "Manager Lookup is Enabled but Attribute is not Defined", false)
 		return ""
+	}
+	if strings.EqualFold(ldapImportConf.User.Manager.Value, "__clear__") {
+		return "__clear__"
 	}
 
 	//-- Get Value of Attribute
@@ -68,7 +70,7 @@ func getManager(importData *userWorkingDataStruct, currentData userAccountStruct
 	return ""
 }
 
-//-- Search Manager on Instance
+// -- Search Manager on Instance
 func searchManager(managerName string) (bool, string) {
 	//-- ESP Query for site
 	if managerName == "" {
@@ -98,9 +100,8 @@ func searchManager(managerName string) (bool, string) {
 	return false, ""
 }
 
-//-- Check if Manager in Cache
+// -- Check if Manager in Cache
 func managerInCache(managerName string) (bool, string) {
-	//-- Check if in Cache
 	_, found := HornbillCache.Managers[strings.ToLower(managerName)]
 	if found {
 		return true, HornbillCache.Managers[strings.ToLower(managerName)]
@@ -108,9 +109,8 @@ func managerInCache(managerName string) (bool, string) {
 	return false, ""
 }
 
-//-- Takes a string based on a LDAP DN and returns to the CN String Name
+// -- Takes a string based on a LDAP DN and returns to the CN String Name
 func getNameFromLDAPString(feild string) string {
-
 	regex := ldapImportConf.User.Manager.Options.GetStringFromValue.Regex
 	reverse := ldapImportConf.User.Manager.Options.GetStringFromValue.Reverse
 	stringReturn := ""
@@ -118,9 +118,10 @@ func getNameFromLDAPString(feild string) string {
 	//-- Match $variables from String
 	re1, err := regexp.Compile(regex)
 	if err != nil {
-		logger(4, "Error Compiling Regex: "+regex+" Error: "+fmt.Sprintf("%v", err), false)
+		logger(4, "Error Compiling Regex: "+regex+" Error: "+err.Error(), false)
 
 	}
+
 	//-- Get Array of all Matched max 100
 	result := re1.FindAllString(feild, 100)
 
@@ -142,9 +143,7 @@ func getNameFromLDAPString(feild string) string {
 					stringReturn = stringReturn + " " + n
 				}
 			}
-
 		}
-
 	}
 	stringReturn = strings.Trim(stringReturn, " ")
 	return stringReturn

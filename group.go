@@ -25,7 +25,6 @@ func getOrgFromLookup(l *userWorkingDataStruct, orgValue string, orgType int) st
 	logger(1, "Looking Up Org "+orgAttributeName, false)
 
 	//-- See if Group is cached
-	//Previous code didn't take duplicate group names in to consideration: _, found := HornbillCache.Groups[strings.ToLower(orgAttributeName)]
 	found := false
 	orgLookupID := ""
 	orgLookupName := ""
@@ -59,12 +58,12 @@ func isUserAMember(l *ldap.Entry, memberOf string) bool {
 	for index := range userAdGroups {
 		logger(1, "Checking Ad Group: "+userAdGroups[index], false)
 		if userAdGroups[index] == memberOf {
-			logger(1, "User is a Member of Ad Group: "+memberOf, false)
+			logger(1, "User is a Member of AD Group: "+memberOf, false)
 			return true
 		}
 	}
 
-	logger(1, "User is not a Member of Ad Group: "+memberOf, false)
+	logger(1, "User is not a Member of AD Group: "+memberOf, false)
 	return false
 }
 

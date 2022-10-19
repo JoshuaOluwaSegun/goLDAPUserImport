@@ -9,7 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+
 	"net/http"
 	"strconv"
 	"strings"
@@ -39,12 +39,12 @@ func loadImageFromValue(imageURI string) []byte {
 			client := &http.Client{Transport: tr, Timeout: duration}
 			resp, err := client.Get(imageURI)
 			if err != nil {
-				logger(4, "Unable to get image URI: "+imageURI+" ("+fmt.Sprintf("%v", http.StatusInternalServerError)+") ["+fmt.Sprintf("%v", err)+"]", false)
+				logger(4, "Unable to get image URI: "+imageURI+" ("+fmt.Sprintf("%v", http.StatusInternalServerError)+") ["+err.Error()+"]", false)
 				return nil
 			}
 			defer resp.Body.Close()
 			if resp.StatusCode == 201 || resp.StatusCode == 200 {
-				imageB, _ = ioutil.ReadAll(resp.Body)
+				imageB, _ = io.ReadAll(resp.Body)
 			} else {
 				logger(4, "Unsuccesful download: "+fmt.Sprintf("%v", resp.StatusCode), false)
 				return nil
@@ -54,7 +54,7 @@ func loadImageFromValue(imageURI string) []byte {
 		default:
 			imageB, Berr = hex.DecodeString(imageURI[2:]) //stripping leading 0x
 			if Berr != nil {
-				logger(4, "Unsuccesful Decoding: "+fmt.Sprintf("%v", Berr), false)
+				logger(4, "Unsuccesful Decoding: "+Berr.Error(), false)
 				return nil
 			}
 		}
@@ -63,13 +63,13 @@ func loadImageFromValue(imageURI string) []byte {
 	//-- Must be a URL
 	response, err := http.Get(ldapImportConf.User.Image.URI)
 	if err != nil {
-		logger(4, "Unsuccesful Download: "+fmt.Sprintf("%v", err), false)
+		logger(4, "Unsuccesful Download: "+err.Error(), false)
 		return nil
 	}
 	defer response.Body.Close()
-	htmlData, err := ioutil.ReadAll(response.Body)
+	htmlData, err := io.ReadAll(response.Body)
 	if err != nil {
-		logger(4, "Unsuccesful Image Download: "+fmt.Sprintf("%v", err), false)
+		logger(4, "Unsuccesful Image Download: "+err.Error(), false)
 		return nil
 	}
 	return htmlData
@@ -103,8 +103,14 @@ func getImage(importData *userWorkingDataStruct) imageStruct {
 }
 
 func userImageUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer *bytes.Buffer) (bool, error) {
+
+	if strings.EqualFold(user.ImageURI, "__clear__") {
+		return userImageRemoval(hIF, user, buffer)
+	}
+
 	//- Profile Images are already in cache as Bytes
-	buffer.WriteString(loggerGen(1, "User Proflile Image Set: "+user.Account.UserID))
+	buffer.WriteString(loggerGen(1, "User Profile Image Set: "+user.Account.UserID))
+
 	//WebDAV upload
 	image := HornbillCache.Images[user.ImageURI]
 	value := ""
@@ -138,7 +144,7 @@ func userImageUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, b
 				return false, Perr
 			}
 			defer response.Body.Close()
-			_, _ = io.Copy(ioutil.Discard, response.Body)
+			_, _ = io.Copy(io.Discard, response.Body)
 			if response.StatusCode == 201 || response.StatusCode == 200 {
 				value = "/" + relLink
 			}
@@ -181,7 +187,7 @@ func userImageUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, b
 	if len(image.imageBytes) > 0 {
 		reqDel, DelErr := http.NewRequest("DELETE", strDAVurl, nil)
 		if DelErr != nil {
-			buffer.WriteString(loggerGen(3, "User image updated but could not remove from session. Error: "+fmt.Sprintf("%v", DelErr)))
+			buffer.WriteString(loggerGen(3, "User image updated but could not remove from session. Error: "+DelErr.Error()))
 			return true, DelErr
 		}
 		reqDel.Header.Add("Authorization", "ESP-APIKEY "+Flags.configAPIKey)
@@ -192,15 +198,46 @@ func userImageUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, b
 
 		responseDel, DelErr := client.Do(reqDel)
 		if DelErr != nil {
-			buffer.WriteString(loggerGen(3, "User image updated but could not remove from session. Error: "+fmt.Sprintf("%v", DelErr)))
+			buffer.WriteString(loggerGen(3, "User image updated but could not remove from session. Error: "+DelErr.Error()))
 			return true, DelErr
 		}
 		defer responseDel.Body.Close()
-		_, _ = io.Copy(ioutil.Discard, responseDel.Body)
+		_, _ = io.Copy(io.Discard, responseDel.Body)
 		if responseDel.StatusCode < 200 || responseDel.StatusCode > 299 {
 			buffer.WriteString(loggerGen(3, "User image updated but could not remove from session. Status Code: "+strconv.Itoa(responseDel.StatusCode)))
 		}
 	}
+
+	return true, nil
+}
+
+func userImageRemoval(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer *bytes.Buffer) (bool, error) {
+	buffer.WriteString(loggerGen(1, "User Profile Image Removal: "+user.Account.UserID))
+
+	hIF.SetParam("objectRef", "urn:sys:user:"+user.Account.UserID)
+	var XMLSTRING = hIF.GetParam()
+
+	if Flags.configDryRun {
+		buffer.WriteString(loggerGen(1, "Profile Image Removal XML "+XMLSTRING))
+		hIF.ClearParam()
+		return true, nil
+	}
+	RespBody, xmlmcErr := hIF.Invoke("activity", "profileImageDelete")
+	var JSONResp xmlmcResponse
+	if xmlmcErr != nil {
+		buffer.WriteString(loggerGen(1, "Profile Image Removal XML "+XMLSTRING))
+		return false, xmlmcErr
+	}
+	err := json.Unmarshal([]byte(RespBody), &JSONResp)
+	if err != nil {
+		buffer.WriteString(loggerGen(1, "Profile Image Removal XML "+XMLSTRING))
+		return false, err
+	}
+	if JSONResp.State.Error != "" {
+		buffer.WriteString(loggerGen(1, "Profile Image Removal XML "+XMLSTRING))
+		return false, errors.New(JSONResp.State.Error)
+	}
+	buffer.WriteString(loggerGen(1, "Image removed for User: "+user.Account.UserID))
 
 	return true, nil
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"strings"
 
 	apiLib "github.com/hornbill/goApiLib"
 )
@@ -32,7 +33,7 @@ func userCreate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer
 	if user.Account.LoginID != "" {
 		hIF.SetParam("loginId", user.Account.LoginID)
 	}
-	if user.Account.EmployeeID != "" && serverBuild >= employeeIDMinServerBuild {
+	if user.Account.EmployeeID != "" {
 		hIF.SetParam("employeeId", user.Account.EmployeeID)
 	}
 	hIF.SetParam("name", user.Account.Name)
@@ -113,68 +114,82 @@ func userCreate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer
 	return true, nil
 }
 
+func checkUserFieldClear(value string) string {
+	if strings.EqualFold(value, "__clear__") {
+		return ""
+	}
+	return value
+}
 func userUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer *bytes.Buffer) (bool, error) {
 
 	buffer.WriteString(loggerGen(1, "User Update: "+user.Account.UserID))
 	//-- Set Params based on already processed params
 	hIF.SetParam("userId", user.Account.UserID)
+
 	if user.Account.LoginID != "" && user.Account.LoginID != "hornbillLoginIDDeDup" {
-		hIF.SetParam("loginId", user.Account.LoginID)
+		hIF.SetParam("loginId", checkUserFieldClear(user.Account.LoginID))
 	}
-	if user.Account.EmployeeID != "" && serverBuild >= employeeIDMinServerBuild {
-		hIF.SetParam("employeeId", user.Account.EmployeeID)
+
+	if user.Account.EmployeeID != "" {
+		hIF.SetParam("employeeId", checkUserFieldClear(user.Account.EmployeeID))
 	}
+
 	hIF.SetParam("userType", user.Account.UserType)
-	hIF.SetParam("name", user.Account.Name)
-	//hIF.SetParam("password", user.Password)
+
+	if user.Account.Name != "" {
+		hIF.SetParam("name", checkUserFieldClear(user.Account.Name))
+	}
+
 	if user.Account.FirstName != "" {
-		hIF.SetParam("firstName", user.Account.FirstName)
+		hIF.SetParam("firstName", checkUserFieldClear(user.Account.FirstName))
 	}
 	if user.Account.LastName != "" {
-		hIF.SetParam("lastName", user.Account.LastName)
+		hIF.SetParam("lastName", checkUserFieldClear(user.Account.LastName))
 	}
 	if user.Account.JobTitle != "" {
-		hIF.SetParam("jobTitle", user.Account.JobTitle)
+		hIF.SetParam("jobTitle", checkUserFieldClear(user.Account.JobTitle))
 	}
 	if user.Account.Site != "" {
-		hIF.SetParam("site", user.Account.Site)
+		siteVal := checkUserFieldClear(user.Account.Site)
+		if siteVal == "" {
+			siteVal = "0"
+		}
+		hIF.SetParam("site", siteVal)
 	}
 	if user.Account.Phone != "" {
-		hIF.SetParam("phone", user.Account.Phone)
+		hIF.SetParam("phone", checkUserFieldClear(user.Account.Phone))
 	}
 	if user.Account.Email != "" {
-		hIF.SetParam("email", user.Account.Email)
+		hIF.SetParam("email", checkUserFieldClear(user.Account.Email))
 	}
 	if user.Account.Mobile != "" {
-		hIF.SetParam("mobile", user.Account.Mobile)
+		hIF.SetParam("mobile", checkUserFieldClear(user.Account.Mobile))
 	}
-	//hIF.SetParam("availabilityStatus", 1)
 	if user.Account.AbsenceMessage != "" {
-		hIF.SetParam("absenceMessage", user.Account.AbsenceMessage)
+		hIF.SetParam("absenceMessage", checkUserFieldClear(user.Account.AbsenceMessage))
 	}
 	if user.Account.TimeZone != "" {
-		hIF.SetParam("timeZone", user.Account.TimeZone)
+		hIF.SetParam("timeZone", checkUserFieldClear(user.Account.TimeZone))
 	}
 	if user.Account.Language != "" {
-		hIF.SetParam("language", user.Account.Language)
+		hIF.SetParam("language", checkUserFieldClear(user.Account.Language))
 	}
 	if user.Account.DateTimeFormat != "" {
-		hIF.SetParam("dateTimeFormat", user.Account.DateTimeFormat)
+		hIF.SetParam("dateTimeFormat", checkUserFieldClear(user.Account.DateTimeFormat))
 	}
 	if user.Account.DateFormat != "" {
-		hIF.SetParam("dateFormat", user.Account.DateFormat)
+		hIF.SetParam("dateFormat", checkUserFieldClear(user.Account.DateFormat))
 	}
 	if user.Account.TimeFormat != "" {
-		hIF.SetParam("timeFormat", user.Account.TimeFormat)
+		hIF.SetParam("timeFormat", checkUserFieldClear(user.Account.TimeFormat))
 	}
 	if user.Account.CurrencySymbol != "" {
-		hIF.SetParam("currencySymbol", user.Account.CurrencySymbol)
+		hIF.SetParam("currencySymbol", checkUserFieldClear(user.Account.CurrencySymbol))
 	}
 	if user.Account.CountryCode != "" {
-		hIF.SetParam("countryCode", user.Account.CountryCode)
+		hIF.SetParam("countryCode", checkUserFieldClear(user.Account.CountryCode))
 	}
-	//hIF.SetParam("notifyEmail", "")
-	//hIF.SetParam("notifyTextMessage", "")
+
 	var XMLSTRING = hIF.GetParam()
 	//-- Dry Run
 	if Flags.configDryRun {
@@ -186,16 +201,16 @@ func userUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer
 	RespBody, xmlmcErr := hIF.Invoke("admin", "userUpdate")
 	var JSONResp xmlmcResponse
 	if xmlmcErr != nil {
-		buffer.WriteString(loggerGen(1, "User Update Profile XML "+XMLSTRING))
+		buffer.WriteString(loggerGen(1, "User Update XML "+XMLSTRING))
 		return false, xmlmcErr
 	}
 	err := json.Unmarshal([]byte(RespBody), &JSONResp)
 	if err != nil {
-		buffer.WriteString(loggerGen(1, "User Update Profile XML "+XMLSTRING))
+		buffer.WriteString(loggerGen(1, "User Update XML "+XMLSTRING))
 		return false, err
 	}
 	if JSONResp.State.Error != "" {
-		buffer.WriteString(loggerGen(1, "User Update Profile XML "+XMLSTRING))
+		buffer.WriteString(loggerGen(1, "User Update XML "+XMLSTRING))
 		return false, errors.New(JSONResp.State.Error)
 	}
 	buffer.WriteString(loggerGen(1, "User Update Success: "+user.Account.UserID))
@@ -209,98 +224,99 @@ func userProfileUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct,
 
 	//-- Set Params based on already processed params
 	hIF.SetParam("userId", user.Account.UserID)
+
 	if user.Profile.MiddleName != "" {
-		hIF.SetParam("middleName", user.Profile.MiddleName)
+		hIF.SetParam("middleName", checkUserFieldClear(user.Profile.MiddleName))
 	}
 	if user.Profile.JobDescription != "" {
-		hIF.SetParam("jobDescription", user.Profile.JobDescription)
+		hIF.SetParam("jobDescription", checkUserFieldClear(user.Profile.JobDescription))
 	}
 	if user.Profile.Manager != "" {
-		hIF.SetParam("manager", user.Profile.Manager)
+		hIF.SetParam("manager", checkUserFieldClear(user.Profile.Manager))
 	}
 	if user.Profile.WorkPhone != "" {
-		hIF.SetParam("workPhone", user.Profile.WorkPhone)
+		hIF.SetParam("workPhone", checkUserFieldClear(user.Profile.WorkPhone))
 	}
 	if user.Profile.Qualifications != "" {
-		hIF.SetParam("qualifications", user.Profile.Qualifications)
+		hIF.SetParam("qualifications", checkUserFieldClear(user.Profile.Qualifications))
 	}
 	if user.Profile.Interests != "" {
-		hIF.SetParam("interests", user.Profile.Interests)
+		hIF.SetParam("interests", checkUserFieldClear(user.Profile.Interests))
 	}
 	if user.Profile.Expertise != "" {
-		hIF.SetParam("expertise", user.Profile.Expertise)
+		hIF.SetParam("expertise", checkUserFieldClear(user.Profile.Expertise))
 	}
 	if user.Profile.Gender != "" {
-		hIF.SetParam("gender", user.Profile.Gender)
+		hIF.SetParam("gender", checkUserFieldClear(user.Profile.Gender))
 	}
 	if user.Profile.Dob != "" {
-		hIF.SetParam("dob", user.Profile.Dob)
+		hIF.SetParam("dob", checkUserFieldClear(user.Profile.Dob))
 	}
 	if user.Profile.Nationality != "" {
-		hIF.SetParam("nationality", user.Profile.Nationality)
+		hIF.SetParam("nationality", checkUserFieldClear(user.Profile.Nationality))
 	}
 	if user.Profile.Religion != "" {
-		hIF.SetParam("religion", user.Profile.Religion)
+		hIF.SetParam("religion", checkUserFieldClear(user.Profile.Religion))
 	}
 	if user.Profile.HomeTelephone != "" {
-		hIF.SetParam("homeTelephone", user.Profile.HomeTelephone)
+		hIF.SetParam("homeTelephone", checkUserFieldClear(user.Profile.HomeTelephone))
 	}
 	if user.Profile.SocialNetworkA != "" {
-		hIF.SetParam("socialNetworkA", user.Profile.SocialNetworkA)
+		hIF.SetParam("socialNetworkA", checkUserFieldClear(user.Profile.SocialNetworkA))
 	}
 	if user.Profile.SocialNetworkB != "" {
-		hIF.SetParam("socialNetworkB", user.Profile.SocialNetworkB)
+		hIF.SetParam("socialNetworkB", checkUserFieldClear(user.Profile.SocialNetworkB))
 	}
 	if user.Profile.SocialNetworkC != "" {
-		hIF.SetParam("socialNetworkC", user.Profile.SocialNetworkC)
+		hIF.SetParam("socialNetworkC", checkUserFieldClear(user.Profile.SocialNetworkC))
 	}
 	if user.Profile.SocialNetworkD != "" {
-		hIF.SetParam("socialNetworkD", user.Profile.SocialNetworkD)
+		hIF.SetParam("socialNetworkD", checkUserFieldClear(user.Profile.SocialNetworkD))
 	}
 	if user.Profile.SocialNetworkE != "" {
-		hIF.SetParam("socialNetworkE", user.Profile.SocialNetworkE)
+		hIF.SetParam("socialNetworkE", checkUserFieldClear(user.Profile.SocialNetworkE))
 	}
 	if user.Profile.SocialNetworkF != "" {
-		hIF.SetParam("socialNetworkF", user.Profile.SocialNetworkF)
+		hIF.SetParam("socialNetworkF", checkUserFieldClear(user.Profile.SocialNetworkF))
 	}
 	if user.Profile.SocialNetworkG != "" {
-		hIF.SetParam("socialNetworkG", user.Profile.SocialNetworkG)
+		hIF.SetParam("socialNetworkG", checkUserFieldClear(user.Profile.SocialNetworkG))
 	}
 	if user.Profile.SocialNetworkH != "" {
-		hIF.SetParam("socialNetworkH", user.Profile.SocialNetworkH)
+		hIF.SetParam("socialNetworkH", checkUserFieldClear(user.Profile.SocialNetworkH))
 	}
 	if user.Profile.PersonalInterests != "" {
-		hIF.SetParam("personalInterests", user.Profile.PersonalInterests)
+		hIF.SetParam("personalInterests", checkUserFieldClear(user.Profile.PersonalInterests))
 	}
 	if user.Profile.HomeAddress != "" {
-		hIF.SetParam("homeAddress", user.Profile.HomeAddress)
+		hIF.SetParam("homeAddress", checkUserFieldClear(user.Profile.HomeAddress))
 	}
 	if user.Profile.PersonalBlog != "" {
-		hIF.SetParam("personalBlog", user.Profile.PersonalBlog)
+		hIF.SetParam("personalBlog", checkUserFieldClear(user.Profile.PersonalBlog))
 	}
 	if user.Profile.Attrib1 != "" {
-		hIF.SetParam("attrib1", user.Profile.Attrib1)
+		hIF.SetParam("attrib1", checkUserFieldClear(user.Profile.Attrib1))
 	}
 	if user.Profile.Attrib2 != "" {
-		hIF.SetParam("attrib2", user.Profile.Attrib2)
+		hIF.SetParam("attrib2", checkUserFieldClear(user.Profile.Attrib2))
 	}
 	if user.Profile.Attrib3 != "" {
-		hIF.SetParam("attrib3", user.Profile.Attrib3)
+		hIF.SetParam("attrib3", checkUserFieldClear(user.Profile.Attrib3))
 	}
 	if user.Profile.Attrib4 != "" {
-		hIF.SetParam("attrib4", user.Profile.Attrib4)
+		hIF.SetParam("attrib4", checkUserFieldClear(user.Profile.Attrib4))
 	}
 	if user.Profile.Attrib5 != "" {
-		hIF.SetParam("attrib5", user.Profile.Attrib5)
+		hIF.SetParam("attrib5", checkUserFieldClear(user.Profile.Attrib5))
 	}
 	if user.Profile.Attrib6 != "" {
-		hIF.SetParam("attrib6", user.Profile.Attrib6)
+		hIF.SetParam("attrib6", checkUserFieldClear(user.Profile.Attrib6))
 	}
 	if user.Profile.Attrib7 != "" {
-		hIF.SetParam("attrib7", user.Profile.Attrib7)
+		hIF.SetParam("attrib7", checkUserFieldClear(user.Profile.Attrib7))
 	}
 	if user.Profile.Attrib8 != "" {
-		hIF.SetParam("attrib8", user.Profile.Attrib8)
+		hIF.SetParam("attrib8", checkUserFieldClear(user.Profile.Attrib8))
 	}
 
 	hIF.CloseElement("profileData")

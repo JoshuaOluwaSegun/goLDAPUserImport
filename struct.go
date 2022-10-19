@@ -7,18 +7,19 @@ import (
 	"github.com/hornbill/ldap"
 )
 
-//----- Constants -----
-const version = "3.12.0"
-const appName = "goLDAPUserImport"
-const applicationName = "LDAP Import Utility"
-const execName = "ldap_user_import"
+// ----- Constants -----
+const (
+	appName         = "goLDAPUserImport"
+	version         = "3.13.0"
+	applicationName = "LDAP Import Utility"
+	execName        = "ldap_user_import"
+	repo            = "hornbill/goLDAPUserImport"
+)
 
 var (
-	mutexCounters            = &sync.Mutex{}
-	bufferMutex              = &sync.Mutex{}
-	importHistoryID          string
-	serverBuild              int
-	employeeIDMinServerBuild = 3241
+	mutexCounters   = &sync.Mutex{}
+	bufferMutex     = &sync.Mutex{}
+	importHistoryID string
 
 	//Password profiles
 	passwordProfile       passwordProfileStruct
@@ -140,7 +141,7 @@ var Time struct {
 	endTime   time.Duration
 }
 
-//----- Variables -----
+// ----- Variables -----
 var ldapImportConf ldapImportConfStruct
 var ldapServerAuth ldapServerConfAuthStruct
 var ldapUsers []*ldap.Entry
@@ -160,7 +161,7 @@ var counters struct {
 	traffic uint64
 }
 
-//----- Structures -----
+// ----- Structures -----
 type ldapServerConfAuthStruct struct {
 	Host     string
 	UserName string
@@ -504,11 +505,4 @@ type stateJSONStruct struct {
 type xmlmcResponse struct {
 	MethodResult string          `json:"status"`
 	State        stateJSONStruct `json:"state"`
-}
-type xmlmcLicenseInfo struct {
-	MethodResult string `json:"status"`
-	Params       struct {
-		ServerBuild int
-	} `json:"params"`
-	State stateJSONStruct `json:"state"`
 }
