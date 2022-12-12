@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## 3.14.0
+
+Feature:
+
+- Added support for setting the following new security settings against imported users:
+  - 2 Factor Authentication
+  - Disable direct login
+  - Disable direct login password reset
+  - Disable device pairing on user profile
+
+Change:
+
+- Removed API Key output during tool run
 ## 3.13.0
 
 Changes:

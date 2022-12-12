@@ -137,7 +137,6 @@ func procFlags() {
 		logger(2, "Flag - logprefix "+Flags.configLogPrefix, true)
 		logger(2, "Flag - dryrun "+fmt.Sprintf("%v", Flags.configDryRun), true)
 		logger(2, "Flag - instanceid "+Flags.configInstanceID, true)
-		logger(2, "Flag - apikey "+Flags.configAPIKey, true)
 		logger(2, "Flag - apitimeout "+fmt.Sprintf("%v", Flags.configAPITimeout), true)
 		logger(2, "Flag - workers "+fmt.Sprintf("%v", Flags.configWorkers)+"\n", true)
 		logger(2, "Flag - forcerun "+fmt.Sprintf("%v", Flags.configForceRun), true)
@@ -262,7 +261,6 @@ func loadConfig() ldapImportConfStruct {
 	if JSONKeyResp.State.Error != "" {
 		logger(4, "Error Loading LDAP Authentication: "+JSONKeyResp.State.Error, true)
 	}
-
 	err = json.Unmarshal([]byte(JSONKeyResp.Params.Data), &ldapServerAuth)
 	if err != nil {
 		logger(4, "Error Decoding LDAP Server Authentication: "+err.Error(), true)

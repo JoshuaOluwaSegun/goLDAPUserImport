@@ -108,7 +108,11 @@ func processData() {
 			"Update Home Organisation: " + strconv.FormatBool(currentUser.Jobs.updateHomeOrg),
 			"Roles Count: " + fmt.Sprintf("%d", len(currentUser.Roles)),
 			"Update Image: " + strconv.FormatBool(currentUser.Jobs.updateImage),
-			"Groups: " + fmt.Sprintf("%d", len(currentUser.Groups))}
+			"Groups: " + fmt.Sprintf("%d", len(currentUser.Groups)),
+			"Enable2FA: " + currentUser.Account.Enable2FA,
+			"DisableDirectLogin: " + currentUser.Account.DisableDirectLogin,
+			"DisableDirectLoginPasswordReset: " + currentUser.Account.DisableDirectLoginPasswordReset,
+			"DisableDevicePairing: " + currentUser.Account.DisableDevicePairing}
 
 		strings.Join(loggerOutput[:], "\n\t")
 		logger(1, strings.Join(loggerOutput[:], "\n\t")+"\n", false)
@@ -466,8 +470,40 @@ func checkUserNeedsUpdate(importData *userWorkingDataStruct, currentData userAcc
 		logger(1, "CountryCode: "+importData.Account.CountryCode+" - "+currentData.HCountry, true)
 		userUpdate = true
 	}
+	val, ok := twoFAMap[currentData.HLogon2FAMethod]
+
+	if ok {
+		if checkUserFieldUpdate(importData.Account.Enable2FA, val) {
+			logger(1, "Enable2FA: "+importData.Account.Enable2FA+" - "+val, true)
+			userUpdate = true
+		}
+	}
+	userSecFlag := getUserFlag(importData.Account)
+	if checkUserFieldUpdate(userSecFlag, currentData.HSecOptions) {
+		userUpdate = true
+		importData.Account.UpdateSecOptions = true
+		importData.Account.SecurityFlag = userSecFlag
+		logger(1, "SecurityOptionsFlag: "+userSecFlag+" - "+currentData.HSecOptions, true)
+		logger(1, "DisableDirectLogin: "+importData.Account.DisableDirectLogin, true)
+		logger(1, "DisableDirectLoginPasswordReset: "+importData.Account.DisableDirectLoginPasswordReset, true)
+		logger(1, "DisableDevicePairing: "+importData.Account.DisableDevicePairing, true)
+	}
 
 	return userUpdate
+}
+
+func getUserFlag(account AccountMappingStruct) string {
+	newFlag := 0
+	if account.DisableDirectLogin == "true" {
+		newFlag += 1
+	}
+	if account.DisableDirectLoginPasswordReset == "true" {
+		newFlag += 2
+	}
+	if account.DisableDevicePairing == "true" {
+		newFlag += 4
+	}
+	return strconv.Itoa(newFlag)
 }
 
 func checkUserFieldUpdate(importField, currentField string) bool {
@@ -752,6 +788,10 @@ func processUserParams(l *ldap.Entry, userID string) {
 	data.Account.TimeFormat = getUserFieldValue(l, "TimeFormat", data.Custom)
 	data.Account.CurrencySymbol = getUserFieldValue(l, "CurrencySymbol", data.Custom)
 	data.Account.CountryCode = getUserFieldValue(l, "CountryCode", data.Custom)
+	data.Account.Enable2FA = getUserFieldValue(l, "Enable2FA", data.Custom)
+	data.Account.DisableDirectLogin = getUserFieldValue(l, "DisableDirectLogin", data.Custom)
+	data.Account.DisableDirectLoginPasswordReset = getUserFieldValue(l, "DisableDirectLoginPasswordReset", data.Custom)
+	data.Account.DisableDevicePairing = getUserFieldValue(l, "DisableDevicePairing", data.Custom)
 	data.Profile.MiddleName = getProfileFieldValue(l, "MiddleName", data.Custom)
 	data.Profile.JobDescription = getProfileFieldValue(l, "JobDescription", data.Custom)
 	data.Profile.Manager = getProfileFieldValue(l, "Manager", data.Custom)

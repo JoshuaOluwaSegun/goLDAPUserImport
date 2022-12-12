@@ -40,6 +40,9 @@ func userCreate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer
 	//-- Password is base64 encoded already in process_data
 	hIF.SetParam("password", user.Account.Password)
 	hIF.SetParam("userType", user.Account.UserType)
+	if user.Account.Enable2FA != "" {
+		hIF.SetParam("enable2fa", user.Account.Enable2FA)
+	}
 	if user.Account.FirstName != "" {
 		hIF.SetParam("firstName", user.Account.FirstName)
 	}
@@ -86,6 +89,22 @@ func userCreate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer
 	if user.Account.CountryCode != "" {
 		hIF.SetParam("countryCode", user.Account.CountryCode)
 	}
+	if user.Account.DisableDirectLogin != "" ||
+		user.Account.DisableDirectLoginPasswordReset != "" ||
+		user.Account.DisableDevicePairing != "" {
+		hIF.OpenElement("securityOptions")
+		if user.Account.DisableDirectLogin != "" {
+			hIF.SetParam("disableDirectLogin", user.Account.DisableDirectLogin)
+		}
+		if user.Account.DisableDirectLoginPasswordReset != "" {
+			hIF.SetParam("disableDirectLoginPasswordReset", user.Account.DisableDirectLoginPasswordReset)
+		}
+		if user.Account.DisableDevicePairing != "" {
+			hIF.SetParam("disableDevicePairing", user.Account.DisableDevicePairing)
+		}
+		hIF.CloseElement("securityOptions")
+	}
+
 	//hIF.SetParam("notifyEmail", "")
 	//hIF.SetParam("notifyTextMessage", "")
 
@@ -135,7 +154,9 @@ func userUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer
 	}
 
 	hIF.SetParam("userType", user.Account.UserType)
-
+	if user.Account.Enable2FA != "" {
+		hIF.SetParam("enable2fa", user.Account.Enable2FA)
+	}
 	if user.Account.Name != "" {
 		hIF.SetParam("name", checkUserFieldClear(user.Account.Name))
 	}
@@ -188,6 +209,13 @@ func userUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer
 	}
 	if user.Account.CountryCode != "" {
 		hIF.SetParam("countryCode", checkUserFieldClear(user.Account.CountryCode))
+	}
+	if user.Account.UpdateSecOptions {
+		hIF.OpenElement("securityOptions")
+		hIF.SetParam("disableDirectLogin", user.Account.DisableDirectLogin)
+		hIF.SetParam("disableDirectLoginPasswordReset", user.Account.DisableDirectLoginPasswordReset)
+		hIF.SetParam("disableDevicePairing", user.Account.DisableDevicePairing)
+		hIF.CloseElement("securityOptions")
 	}
 
 	var XMLSTRING = hIF.GetParam()

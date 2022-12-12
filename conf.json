@@ -1,0 +1,167 @@
+{
+    "version": 5,
+    "User": {
+        "AccountMapping": {
+            "UserId": "[sAMAccountName]",
+            "UserType": "basic",
+            "Name": "[cn]",
+            "Password": "",
+            "FirstName": "[givenName]",
+            "LastName": "[sn]",
+            "JobTitle": "__clear__",
+            "Site": "__clear__",
+            "Phone": "[telephoneNumber]",
+            "Email": "[mail]",
+            "Mobile": "[mobile]",
+            "AbsenceMessage": "",
+            "TimeZone": "",
+            "Language": "",
+            "DateTimeFormat": "",
+            "DateFormat": "",
+            "TimeFormat": "",
+            "CurrencySymbol": "",
+            "CountryCode": "",
+            "loginId": "[sAMAccountName]",
+            "employeeId": "[sAMAccountName]",
+            "enable2fa": "email",
+            "disableDirectLogin": "true",
+            "disableDirectLoginPasswordReset": "true",
+            "disableDevicePairing": "true"
+        },
+        "UserDN": "[distinguishedName]",
+        "Type": {
+            "Action": "None",
+            "Value": "user"
+        },
+        "Status": {
+            "Action": "None",
+            "Value": "active"
+        },
+        "Role": {
+            "Action": "Both",
+            "Roles": ["Basic User Role"]
+        },
+        "ProfileMapping": {
+            "Manager": "__clear__",
+            "WorkPhone": "[telephoneNumber]",
+            "Attrib1": "some new value",
+            "Attrib2": "__clear__",
+            "Attrib3": "",
+            "Attrib4": "__clear__",
+            "JobDescription": "Some value here",
+            "Attrib5": "",
+            "Attrib6": "__clear__",
+            "Attrib7": "",
+            "Attrib8": "__clear__"
+        },
+        "Manager": {
+            "Action": "Both",
+            "Value": "__clear__",
+            "Options": {
+                "GetStringFromValue": {
+                    "Reverse": true,
+                    "Regex": "CN=(.*?)(?:,[A-Z]+=|$)"
+                },
+                "MatchAgainstDistinguishedName": true,
+                "Search": {
+                    "Enable": true
+                }
+            }
+        },
+        "Image": {
+            "Action": "Both",
+            "UploadType": "URI",
+            "InsecureSkipVerify": true,
+            "ImageType": "jpg",
+            "Value": "[thumbnailPhoto]",
+            "URI": "__clear__"
+        },
+        "Site": {
+            "Action": "Both",
+            "Value": "Hull"
+        },
+        "Org": [{
+            "Action": "Both",
+            "Value": "[company]",
+            "MemberOf": "",
+            "Options": {
+                "Type": 5,
+                "Membership": "member",
+                "TasksView": true,
+                "TasksAction": true,
+                "OnlyOneGroupAssignment": true,
+                "SetAsHomeOrganisation": true
+            }
+        }, {
+            "Action": "Both",
+            "Value": "[department]",
+            "MemberOf": "",
+            "Options": {
+                "Type": 2,
+                "Membership": "member",
+                "TasksView": true,
+                "TasksAction": true,
+                "OnlyOneGroupAssignment": false,
+                "SetAsHomeOrganisation": false
+            }
+        }, {
+            "Action": "Both",
+            "Value": "RND",
+            "MemberOf": "RND",
+            "Options": {
+                "Type": 2,
+                "Membership": "member",
+                "TasksView": true,
+                "TasksAction": true,
+                "OnlyOneGroupAssignment": false,
+                "SetAsHomeOrganisation": false
+            }
+        }],
+        "Operation": "Both"
+    },
+    "LDAP": {
+        "Server": {
+            "keySafeID": 92,
+            "InsecureSkipVerify": false,
+            "Debug": false,
+            "ConnectionType": ""
+        },
+        "Query": {
+            "Attributes": ["cn", "distinguishedName", "sn", "telephoneNumber", "mobile", "sAMAccountName", "userPrincipalName", "givenName", "description", "department", "thumbnailPhoto", "company", "title", "manager", "whenCreated", "accountExpires", "objectSid", "objectGUID", "mail"],
+            "Scope": 2,
+            "DerefAliases": 1,
+            "TypesOnly": false,
+            "SizeLimit": 0,
+            "TimeLimit": 0,
+            "Filter": "(objectCategory=user)",
+            "DSN": "DC=dev-a,DC=itom,DC=example,DC=com"
+        }
+    },
+    "Advanced": {
+        "LogLevel": 1,
+        "LogRetention": 0,
+        "PageSize": 500
+    },
+    "Actions": [{
+        "Action": "LDAPDateToDateTime",
+        "Value": "[accountExpires]",
+        "Options": {
+            "regexValue": ""
+        },
+        "Output": "accountExpires"
+    }, {
+        "Action": "SIDConversion",
+        "Value": "[objectSid]",
+        "Options": {
+            "regexValue": ""
+        },
+        "Output": "User ID"
+    }, {
+        "Action": "GUIDConversion",
+        "Value": "[objectGUID]",
+        "Options": {
+            "regexValue": ""
+        },
+        "Output": "guid"
+    }]
+}

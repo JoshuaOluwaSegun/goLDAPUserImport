@@ -10,16 +10,17 @@ import (
 // ----- Constants -----
 const (
 	appName         = "goLDAPUserImport"
-	version         = "3.13.0"
+	version         = "3.14.0"
 	applicationName = "LDAP Import Utility"
 	execName        = "ldap_user_import"
 	repo            = "hornbill/goLDAPUserImport"
 )
 
 var (
-	mutexCounters   = &sync.Mutex{}
 	bufferMutex     = &sync.Mutex{}
 	importHistoryID string
+	mutexCounters   = &sync.Mutex{}
+	twoFAMap        = map[string]string{"0": "disabled", "1": "email"}
 
 	//Password profiles
 	passwordProfile       passwordProfileStruct
@@ -273,28 +274,34 @@ type ldapImportConfStruct struct {
 
 // AccountMappingStruct Used
 type AccountMappingStruct struct {
-	UserID         string `json:"UserID"`
-	LoginID        string `json:"loginId"`
-	EmployeeID     string `json:"employeeId"`
-	UserType       string `json:"UserType"`
-	Name           string `json:"Name"`
-	Password       string `json:"Password"`
-	FirstName      string `json:"FirstName"`
-	LastName       string `json:"LastName"`
-	JobTitle       string `json:"JobTitle"`
-	Site           string `json:"Site"`
-	Phone          string `json:"Phone"`
-	Email          string `json:"Email"`
-	Mobile         string `json:"Mobile"`
-	AbsenceMessage string `json:"AbsenceMessage"`
-	TimeZone       string `json:"TimeZone"`
-	Language       string `json:"Language"`
-	DateTimeFormat string `json:"DateTimeFormat"`
-	DateFormat     string `json:"DateFormat"`
-	TimeFormat     string `json:"TimeFormat"`
-	CurrencySymbol string `json:"CurrencySymbol"`
-	CountryCode    string `json:"CountryCode"`
-	HomeOrg        string `json:"HomeOrg"`
+	UserID                          string `json:"UserID"`
+	LoginID                         string `json:"loginId"`
+	EmployeeID                      string `json:"employeeId"`
+	UserType                        string `json:"UserType"`
+	Name                            string `json:"Name"`
+	Password                        string `json:"Password"`
+	FirstName                       string `json:"FirstName"`
+	LastName                        string `json:"LastName"`
+	JobTitle                        string `json:"JobTitle"`
+	Site                            string `json:"Site"`
+	Phone                           string `json:"Phone"`
+	Email                           string `json:"Email"`
+	Mobile                          string `json:"Mobile"`
+	AbsenceMessage                  string `json:"AbsenceMessage"`
+	TimeZone                        string `json:"TimeZone"`
+	Language                        string `json:"Language"`
+	DateTimeFormat                  string `json:"DateTimeFormat"`
+	DateFormat                      string `json:"DateFormat"`
+	TimeFormat                      string `json:"TimeFormat"`
+	CurrencySymbol                  string `json:"CurrencySymbol"`
+	CountryCode                     string `json:"CountryCode"`
+	HomeOrg                         string `json:"HomeOrg"`
+	Enable2FA                       string `json:"enable2fa"`
+	UpdateSecOptions                bool
+	SecurityFlag                    string
+	DisableDirectLogin              string `json:"disableDirectLogin"`
+	DisableDirectLoginPasswordReset string `json:"disableDirectLoginPasswordReset"`
+	DisableDevicePairing            string `json:"disableDevicePairing"`
 }
 
 // ProfileMappingStruct Used
@@ -385,6 +392,8 @@ type userAccountStruct struct {
 	HTimeFormat          string `json:"h_time_format"`
 	HCurrencySymbol      string `json:"h_currency_symbol"`
 	HLastLogon           string `json:"h_last_logon"`
+	HLogon2FAMethod      string `json:"h_logon_2fa_method"`
+	HSecOptions          string `json:"h_sec_options"`
 	HSnA                 string `json:"h_sn_a"`
 	HSnB                 string `json:"h_sn_b"`
 	HSnC                 string `json:"h_sn_c"`
