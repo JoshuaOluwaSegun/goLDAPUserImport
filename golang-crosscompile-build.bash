@@ -14,7 +14,7 @@ version=${versiond//./_}
 #Remove White Space
 version=${version// /}
 versiond=${versiond// /}
-platforms="windows/386 windows/amd64 linux/386 linux/amd64 linux/arm darwin/amd64"
+platforms="windows/386 windows/amd64 linux/386 linux/amd64 linux/arm darwin/arm64"
 printf " ---- Building LDAP User Import $versiond ---- \n"
 
 rm -rf "release/"
