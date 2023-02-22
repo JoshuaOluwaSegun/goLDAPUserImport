@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.15.0 (February 22nd 2023)
+
+Change:
+
+- Complied with latest Go binaries because of security advisory.
+
 ## 3.14.0
 
 Feature:
