@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.16.0 (Feburary, 24th, 2022)
+
+Feature:
+
+- Enabled option to upload User images from the local filesystem or network shares.
+
 ## 3.15.0 (February 22nd 2023)
 
 Change:
