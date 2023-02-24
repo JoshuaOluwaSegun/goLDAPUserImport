@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/sha1"
 	"crypto/tls"
@@ -9,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 
 	"net/http"
 	"strconv"
@@ -24,10 +26,10 @@ func loadImageFromValue(imageURI string) []byte {
 	if ldapImportConf.User.Image.UploadType != "AD" {
 		logger(1, "Image Lookup URI: "+imageURI, false)
 	}
+	var imageB []byte
+	var Berr error
 	if strings.ToUpper(ldapImportConf.User.Image.UploadType) != "URL" {
 		// get binary to upload via WEBDAV and then set value to relative "session" URI
-		var imageB []byte
-		var Berr error
 		switch strings.ToUpper(ldapImportConf.User.Image.UploadType) {
 		//-- Get Local URL
 		case "URI":
@@ -51,6 +53,24 @@ func loadImageFromValue(imageURI string) []byte {
 			}
 		case "AD":
 			imageB = []byte(imageURI)
+		case "LOCAL":
+			//-- Load Config File
+			file, Berr := os.Open(imageURI)
+			//-- Check For Error Reading File
+			if Berr != nil {
+				logger(4, "Error Opening File: "+Berr.Error(), false)
+				return nil
+			}
+			defer file.Close()
+			// create a new buffer base on file size
+			fInfo, _ := file.Stat()
+			size := fInfo.Size()
+			buf := make([]byte, size)
+
+			// read file content into buffer
+			fReader := bufio.NewReader(file)
+			fReader.Read(buf)
+			imageB = buf
 		default:
 			imageB, Berr = hex.DecodeString(imageURI[2:]) //stripping leading 0x
 			if Berr != nil {
@@ -73,7 +93,6 @@ func loadImageFromValue(imageURI string) []byte {
 		return nil
 	}
 	return htmlData
-
 }
 
 func getImage(importData *userWorkingDataStruct) imageStruct {
