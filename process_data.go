@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/go-objectsid"
+	"github.com/google/uuid"
 	"github.com/hornbill/ldap"
 )
 
@@ -36,30 +37,47 @@ func processLDAPUsers() {
 
 	logger(1, "LDAP Users Processed: "+fmt.Sprintf("%d", len(ldapUsers))+"\n", true)
 }
+
+func generateUniqueGUID() string {
+
+	userIdToCheck := ""
+	userExists := true
+
+	for ok := true; ok; ok = userExists {
+		id := uuid.New()
+		userIdToCheck = id.String()
+		userExists = false
+		for _, checkHornbillUserData := range HornbillCache.Users {
+			if strings.EqualFold(checkHornbillUserData.HUserID, userIdToCheck) {
+				userExists = true
+				break
+			}
+		}
+	}
+	logger(1, "Generated GUID: "+userIdToCheck, false)
+	return userIdToCheck
+}
+
 func processData() {
 	logger(1, "Processing User Data", true)
 	for user := range HornbillCache.UsersWorking {
 
 		currentUser := HornbillCache.UsersWorking[user]
-		//-- Current UserID
+
 		userID := strings.ToLower(currentUser.Account.UserID)
 
-		//-- Extra Debugging
-		logger(1, "LDAP User ID: '"+userID+"'\n", false)
-
-		hornbillUserData := HornbillCache.Users[userID]
-
-		if userID == "" {
-			CounterInc(7)
-			logger(4, "LDAP Record Has no User ID: '"+fmt.Sprintf("%+v", currentUser.LDAP)+"'\n", false)
-			continue
+		userExists := false
+		var hornbillUserData userAccountStruct
+		if checkHornbillUserData, ok := HornbillCache.Users[strings.ToLower(currentUser.Account.CheckID)]; ok {
+			userExists = true
+			hornbillUserData = checkHornbillUserData
 		}
 
 		//-- Check Map no need to loop
-		userExists := false
-		if strings.ToLower(hornbillUserData.HUserID) == userID {
-			userExists = true
+		if userExists {
+			logger(1, "LDAP User ID: '"+userID+"'", false)
 			if strings.ToLower(ldapImportConf.User.Operation) == "update" || strings.ToLower(ldapImportConf.User.Operation) == "both" {
+				currentUser.Jobs.id = hornbillUserData.HUserID
 				currentUser.Jobs.update = checkUserNeedsUpdate(currentUser, hornbillUserData)
 
 				currentUser.Jobs.updateProfile = checkUserNeedsProfileUpdate(currentUser, hornbillUserData)
@@ -81,7 +99,26 @@ func processData() {
 				currentUser.Jobs.updateStatus = checkUserNeedsStatusUpdate(currentUser, hornbillUserData)
 			}
 		} else {
-			if strings.ToLower(ldapImportConf.User.Operation) == "create" || strings.ToLower(ldapImportConf.User.Operation) == "both" {
+			if strings.ToLower(ldapImportConf.User.Operation) == "create" || strings.ToLower(ldapImportConf.User.Operation) == "both" && userID != "" {
+
+				//userID was lowercased
+				if userID == "auto_generated_guid" {
+					logger(1, "LDAP User ID: NOT Found - Generating GUID", false)
+					GUID := generateUniqueGUID()
+					HornbillCache.UsersWorking[user].Jobs.id = GUID
+					HornbillCache.UsersWorking[user].Account.UserID = GUID
+					userID = GUID
+				} else {
+					logger(1, "LDAP User ID: '"+userID+"' NOT Found", false)
+					currentUser.Jobs.id = userID
+				}
+
+				if userID == "" {
+					CounterInc(7)
+					logger(4, "LDAP Record Has no User ID: '"+fmt.Sprintf("%+v", currentUser.LDAP)+"'\n", false)
+					continue
+				}
+
 				//-- Check for Password
 				setUserPasswordValueForCreate(currentUser)
 				//-- Set Site ID Based on Config
@@ -97,6 +134,8 @@ func processData() {
 
 		loggerOutput := []string{
 			"User: " + userID,
+			"Hornbill User ID: " + currentUser.Jobs.id,
+			"Checked ID: " + currentUser.Account.CheckID,
 			"Operation: " + ldapImportConf.User.Operation,
 			"User Exists: " + strconv.FormatBool(userExists),
 			"Create: " + strconv.FormatBool(currentUser.Jobs.create),
@@ -536,10 +575,10 @@ func checkUserNeedsProfileUpdate(importData *userWorkingDataStruct, currentData 
 		logger(1, "JobDescription: "+importData.Profile.JobDescription+" - "+currentData.HSummary, true)
 		userProfileUpdate = true
 	}
-	if checkUserFieldUpdate(importData.Profile.WorkPhone, currentData.HPhone) {
-		logger(1, "WorkPhone: "+importData.Profile.WorkPhone+" - "+currentData.HPhone, true)
-		userProfileUpdate = true
-	}
+	//	if checkUserFieldUpdate(importData.Profile.WorkPhone, currentData.HPhone) {
+	//		logger(1, "WorkPhone: "+importData.Profile.WorkPhone+" - "+currentData.HPhone, true)
+	//		userProfileUpdate = true
+	//	}
 	if checkUserFieldUpdate(importData.Profile.Qualifications, currentData.HQualifications) {
 		logger(1, "Qualifications: "+importData.Profile.Qualifications+" - "+currentData.HQualifications, true)
 		userProfileUpdate = true
@@ -660,6 +699,46 @@ func processImportActions(l *ldap.Entry) string {
 	//-- init map
 	data.Custom = make(map[string]string)
 
+	data.Account.UserID = getUserFieldValue(l, "UserID", data.Custom)
+	data.Account.CheckID = data.Account.UserID
+
+	switch ldapImportConf.User.HornbillUserIDColumn {
+	case "h_employee_id":
+		{
+			data.Account.CheckID = getUserFieldValue(l, "EmployeeID", data.Custom)
+		}
+	case "h_login_id":
+		{
+			data.Account.CheckID = getUserFieldValue(l, "LoginID", data.Custom)
+		}
+	case "h_email":
+		{
+			data.Account.CheckID = getUserFieldValue(l, "Email", data.Custom)
+		}
+	case "h_mobile":
+		{
+			data.Account.CheckID = getUserFieldValue(l, "Mobile", data.Custom)
+		}
+	case "h_attrib1":
+		{
+			data.Account.CheckID = getProfileFieldValue(l, "Attrib1", data.Custom)
+		}
+	case "h_attrib8":
+		{
+			data.Account.CheckID = getProfileFieldValue(l, "Attrib8", data.Custom)
+		}
+	case "h_sn_a":
+		{
+			data.Account.CheckID = getProfileFieldValue(l, "SocialNetworkA", data.Custom)
+		}
+	}
+
+	if data.Account.CheckID == "" {
+		logger(3, "No Unique Identifier set for this record  "+fmt.Sprintf("%v", l), true)
+		return ""
+	}
+	logger(2, "Process Data for:  "+data.Account.CheckID+" ("+data.Account.UserID+")", false)
+
 	//-- Loop Matches
 	for _, action := range ldapImportConf.Actions {
 		switch action.Action {
@@ -754,12 +833,12 @@ func processImportActions(l *ldap.Entry) string {
 		}
 	}
 
-	data.Account.UserID = getUserFieldValue(l, "UserID", data.Custom)
+	//data.Account.UserID = getUserFieldValue(l, "UserID", data.Custom)
 
 	logger(1, "Import Actions for: "+data.Account.UserID, false)
 
 	//-- Store Result in map of userid
-	var userID = strings.ToLower(data.Account.UserID)
+	var userID = strings.ToLower(data.Account.CheckID)
 	HornbillCache.UsersWorking[userID] = data
 	return userID
 }
@@ -778,6 +857,9 @@ func processUserParams(l *ldap.Entry, userID string) {
 	data.Account.JobTitle = getUserFieldValue(l, "JobTitle", data.Custom)
 	data.Account.Site = getUserFieldValue(l, "Site", data.Custom)
 	data.Account.Phone = getUserFieldValue(l, "Phone", data.Custom)
+	if data.Account.Phone == "" {
+		data.Account.Phone = getProfileFieldValue(l, "WorkPhone", data.Custom)
+	}
 	data.Account.Email = getUserFieldValue(l, "Email", data.Custom)
 	data.Account.Mobile = getUserFieldValue(l, "Mobile", data.Custom)
 	data.Account.AbsenceMessage = getUserFieldValue(l, "AbsenceMessage", data.Custom)
@@ -795,7 +877,7 @@ func processUserParams(l *ldap.Entry, userID string) {
 	data.Profile.MiddleName = getProfileFieldValue(l, "MiddleName", data.Custom)
 	data.Profile.JobDescription = getProfileFieldValue(l, "JobDescription", data.Custom)
 	data.Profile.Manager = getProfileFieldValue(l, "Manager", data.Custom)
-	data.Profile.WorkPhone = getProfileFieldValue(l, "WorkPhone", data.Custom)
+	//	data.Profile.WorkPhone = getProfileFieldValue(l, "WorkPhone", data.Custom)
 	data.Profile.Qualifications = getProfileFieldValue(l, "Qualifications", data.Custom)
 	data.Profile.Interests = getProfileFieldValue(l, "Interests", data.Custom)
 	data.Profile.Expertise = getProfileFieldValue(l, "Expertise", data.Custom)

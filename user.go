@@ -27,9 +27,9 @@ func getUserFromDNCache(DN string) string {
 }
 
 func userCreate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer *bytes.Buffer) (bool, error) {
-	buffer.WriteString(loggerGen(1, "User Create: "+user.Account.UserID))
+	buffer.WriteString(loggerGen(1, "User Create: "+user.Account.UserID+" ("+user.Account.CheckID+")"))
 	//-- Set Params based on already processed params
-	hIF.SetParam("userId", user.Account.UserID)
+	hIF.SetParam("userId", user.Jobs.id)
 	if user.Account.LoginID != "" {
 		hIF.SetParam("loginId", user.Account.LoginID)
 	}
@@ -141,9 +141,9 @@ func checkUserFieldClear(value string) string {
 }
 func userUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer *bytes.Buffer) (bool, error) {
 
-	buffer.WriteString(loggerGen(1, "User Update: "+user.Account.UserID))
+	buffer.WriteString(loggerGen(1, "User Update: "+user.Account.CheckID+" ("+user.Jobs.id+")"))
 	//-- Set Params based on already processed params
-	hIF.SetParam("userId", user.Account.UserID)
+	hIF.SetParam("userId", user.Jobs.id)
 
 	if user.Account.LoginID != "" && user.Account.LoginID != "hornbillLoginIDDeDup" {
 		hIF.SetParam("loginId", checkUserFieldClear(user.Account.LoginID))
@@ -251,7 +251,7 @@ func userProfileUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct,
 	hIF.OpenElement("profileData")
 
 	//-- Set Params based on already processed params
-	hIF.SetParam("userId", user.Account.UserID)
+	hIF.SetParam("userId", user.Jobs.id)
 
 	if user.Profile.MiddleName != "" {
 		hIF.SetParam("middleName", checkUserFieldClear(user.Profile.MiddleName))
@@ -262,9 +262,9 @@ func userProfileUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct,
 	if user.Profile.Manager != "" {
 		hIF.SetParam("manager", checkUserFieldClear(user.Profile.Manager))
 	}
-	if user.Profile.WorkPhone != "" {
-		hIF.SetParam("workPhone", checkUserFieldClear(user.Profile.WorkPhone))
-	}
+	//	if user.Profile.WorkPhone != "" {
+	//		hIF.SetParam("workPhone", checkUserFieldClear(user.Profile.WorkPhone))
+	//	}
 	if user.Profile.Qualifications != "" {
 		hIF.SetParam("qualifications", checkUserFieldClear(user.Profile.Qualifications))
 	}
@@ -371,16 +371,17 @@ func userProfileUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct,
 		buffer.WriteString(loggerGen(1, "User Update Profile XML "+XMLSTRING))
 		return false, errors.New(JSONResp.State.Error)
 	}
-	buffer.WriteString(loggerGen(1, "User Update Profile Success: "+user.Account.UserID))
+
+	buffer.WriteString(loggerGen(1, "User Update Profile Success: "+user.Account.CheckID+" ("+user.Jobs.id+")"))
 	return true, nil
 }
 
 func userRolesUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer *bytes.Buffer) (bool, error) {
 
-	hIF.SetParam("userId", user.Account.UserID)
+	hIF.SetParam("userId", user.Jobs.id)
 	for roleIndex := range user.Roles {
 		role := user.Roles[roleIndex]
-		buffer.WriteString(loggerGen(1, "User Add Role User: "+user.Account.UserID+" Role: "+role))
+		buffer.WriteString(loggerGen(1, "User Add Role User: "+user.Account.CheckID+" ("+user.Jobs.id+")"+" Role: "+role))
 		hIF.SetParam("role", role)
 	}
 	var XMLSTRING = hIF.GetParam()
@@ -405,13 +406,13 @@ func userRolesUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, b
 		buffer.WriteString(loggerGen(1, "User Add Role XML "+XMLSTRING))
 		return false, errors.New(JSONResp.State.Error)
 	}
-	buffer.WriteString(loggerGen(1, "Role added to User: "+user.Account.UserID))
+	buffer.WriteString(loggerGen(1, "Role added to User: "+user.Account.CheckID+" ("+user.Jobs.id+")"))
 	return true, nil
 }
 
 func userStatusUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer *bytes.Buffer) (bool, error) {
 
-	hIF.SetParam("userId", user.Account.UserID)
+	hIF.SetParam("userId", user.Jobs.id)
 	hIF.SetParam("accountStatus", ldapImportConf.User.Status.Value)
 
 	var XMLSTRING = hIF.GetParam()
@@ -436,6 +437,6 @@ func userStatusUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, 
 		buffer.WriteString(loggerGen(1, "User Set Status XML "+XMLSTRING))
 		return false, errors.New(JSONResp.State.Error)
 	}
-	buffer.WriteString(loggerGen(1, "User Status Updated: "+user.Account.UserID))
+	buffer.WriteString(loggerGen(1, "User Status Updated: "+user.Account.CheckID+" ("+user.Jobs.id+")"))
 	return true, nil
 }

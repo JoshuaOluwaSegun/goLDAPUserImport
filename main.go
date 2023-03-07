@@ -81,6 +81,8 @@ func main() {
 	//-- Get Password Profile
 	getPasswordProfile()
 
+	ldapImportConf.User.HornbillUserIDColumn = strings.ToLower(ldapImportConf.User.HornbillUserIDColumn)
+
 	//-- Query LDAP
 	queryLdap()
 

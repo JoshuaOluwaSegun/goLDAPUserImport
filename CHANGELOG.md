@@ -1,6 +1,17 @@
 # CHANGELOG
 
-## 3.16.0 (Feburary, 24th, 2022)
+## 3.17.0 (March 7th 2023)
+
+Change: 
+
+- ability to treat another field as unique (other than UserID)
+- addition of GUID creation if "auto_generated_guid" is mapped to User ID
+
+Fix:
+
+- as ProfileMapping.WorkPhone maps to the same field as AccountMapping.Phone it could be that both fields are configured to receive two separte LDAP fields. The profile update overwriting the account's version. The ProfileMapping.WorkPhone field will NOT be updated as part of the Profile going forward, HOWEVER if AccountMapping.Phone is EMPTY, then the contents of ProfileMapping.WorkPhone will be used. As the Account was always updated prior to the Profile, the perceived behaviour will be the same.
+
+## 3.16.0 (Feburary, 24th, 2023)
 
 Feature:
 

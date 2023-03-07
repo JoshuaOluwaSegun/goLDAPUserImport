@@ -314,10 +314,69 @@ func getUserAccountList(count uint64) {
 			break
 		}
 		//-- Push into Map
-		for index := range JSONResp.Params.RowData.Row {
-			//-- Store All Users so we can search later for manager on HName
-			//-- This is better than calling back to the instance
-			HornbillCache.Users[strings.ToLower(JSONResp.Params.RowData.Row[index].HUserID)] = JSONResp.Params.RowData.Row[index]
+		//-- Store All Users so we can search later for manager on HName
+		//-- This is better than calling back to the instance
+		switch ldapImportConf.User.HornbillUserIDColumn {
+		case "":
+			{ // as Go Switch doesn't fall through
+				for index := range JSONResp.Params.RowData.Row {
+					HornbillCache.Users[strings.ToLower(JSONResp.Params.RowData.Row[index].HUserID)] = JSONResp.Params.RowData.Row[index]
+				}
+			}
+		case "h_user_id":
+			{ // as Go Switch doesn't fall through
+				for index := range JSONResp.Params.RowData.Row {
+					HornbillCache.Users[strings.ToLower(JSONResp.Params.RowData.Row[index].HUserID)] = JSONResp.Params.RowData.Row[index]
+				}
+			}
+		case "h_employee_id":
+			{
+				for index := range JSONResp.Params.RowData.Row {
+					HornbillCache.Users[strings.ToLower(JSONResp.Params.RowData.Row[index].HEmployeeID)] = JSONResp.Params.RowData.Row[index]
+				}
+			}
+		case "h_login_id":
+			{
+				for index := range JSONResp.Params.RowData.Row {
+					HornbillCache.Users[strings.ToLower(JSONResp.Params.RowData.Row[index].HLoginID)] = JSONResp.Params.RowData.Row[index]
+				}
+			}
+		case "h_email":
+			{
+				for index := range JSONResp.Params.RowData.Row {
+					HornbillCache.Users[strings.ToLower(JSONResp.Params.RowData.Row[index].HEmail)] = JSONResp.Params.RowData.Row[index]
+				}
+			}
+		case "h_mobile":
+			{ // as Go Switch doesn't fall through
+				for index := range JSONResp.Params.RowData.Row {
+					HornbillCache.Users[strings.ToLower(JSONResp.Params.RowData.Row[index].HMobile)] = JSONResp.Params.RowData.Row[index]
+				}
+			}
+		case "h_attrib1":
+			{ // as Go Switch doesn't fall through
+				for index := range JSONResp.Params.RowData.Row {
+					HornbillCache.Users[strings.ToLower(JSONResp.Params.RowData.Row[index].HAttrib1)] = JSONResp.Params.RowData.Row[index]
+				}
+			}
+		case "h_attrib8":
+			{ // as Go Switch doesn't fall through
+				for index := range JSONResp.Params.RowData.Row {
+					HornbillCache.Users[strings.ToLower(JSONResp.Params.RowData.Row[index].HAttrib8)] = JSONResp.Params.RowData.Row[index]
+				}
+			}
+		case "h_sn_a":
+			{ // as Go Switch doesn't fall through
+				for index := range JSONResp.Params.RowData.Row {
+					HornbillCache.Users[strings.ToLower(JSONResp.Params.RowData.Row[index].HSnA)] = JSONResp.Params.RowData.Row[index]
+				}
+			}
+		default:
+			{
+				for index := range JSONResp.Params.RowData.Row {
+					HornbillCache.Users[strings.ToLower(JSONResp.Params.RowData.Row[index].HUserID)] = JSONResp.Params.RowData.Row[index]
+				}
+			}
 		}
 
 		// Add pageSize

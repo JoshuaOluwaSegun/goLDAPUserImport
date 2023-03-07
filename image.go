@@ -168,7 +168,7 @@ func userImageUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, b
 				value = "/" + relLink
 			}
 		} else {
-			buffer.WriteString(loggerGen(1, "Unable to Uplaod Profile Image to Dav as its empty"))
+			buffer.WriteString(loggerGen(1, "Unable to Upload Profile Image to DAV as it's empty"))
 			return true, nil
 		}
 	}

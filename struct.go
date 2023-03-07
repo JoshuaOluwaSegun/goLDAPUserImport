@@ -10,7 +10,7 @@ import (
 // ----- Constants -----
 const (
 	appName         = "goLDAPUserImport"
-	version         = "3.16.0"
+	version         = "3.17.0"
 	applicationName = "LDAP Import Utility"
 	execName        = "ldap_user_import"
 	repo            = "hornbill/goLDAPUserImport"
@@ -100,6 +100,7 @@ var HornbillUserStatusMap = map[string]string{
 }
 
 type userImportJobs struct {
+	id            string
 	create        bool
 	update        bool
 	updateHomeOrg bool
@@ -200,10 +201,11 @@ type ldapImportConfStruct struct {
 		} `json:"Query"`
 	} `json:"LDAP"`
 	User struct {
-		Operation      string               `json:"Operation"`
-		AccountMapping AccountMappingStruct `json:"AccountMapping"`
-		UserDN         string               `json:"UserDN"`
-		Type           struct {
+		Operation            string               `json:"Operation"`
+		AccountMapping       AccountMappingStruct `json:"AccountMapping"`
+		HornbillUserIDColumn string               `json:"HornbillUniqueColumn"`
+		UserDN               string               `json:"UserDN"`
+		Type                 struct {
 			Action string `json:"Action"`
 		} `json:"Type"`
 		Status struct {
@@ -275,8 +277,9 @@ type ldapImportConfStruct struct {
 // AccountMappingStruct Used
 type AccountMappingStruct struct {
 	UserID                          string `json:"UserID"`
-	LoginID                         string `json:"loginId"`
-	EmployeeID                      string `json:"employeeId"`
+	LoginID                         string `json:"LoginId"`
+	CheckID                         string
+	EmployeeID                      string `json:"EmployeeId"`
 	UserType                        string `json:"UserType"`
 	Name                            string `json:"Name"`
 	Password                        string `json:"Password"`

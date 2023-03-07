@@ -19,34 +19,39 @@ func worker(id int, jobs <-chan int, results chan<- int, bar *pb.ProgressBar) {
 		currentUser := HornbillCache.UsersWorkingIndex[index-1]
 		//-- Buffer for Logging
 		var buffer bytes.Buffer
-		userCreateSuccess := true
-		if currentUser.Jobs.create {
-			userCreateSuccess = createUser(hIF, currentUser, &buffer)
-		}
 
-		if currentUser.Jobs.update || currentUser.Jobs.updateType || currentUser.Jobs.updateSite {
-			updateUser(hIF, currentUser, &buffer)
+		blnContinue := true
+		if currentUser.Jobs.create {
+			//fmt.Println(currentUser)
+			blnContinue = createUser(hIF, currentUser, &buffer)
+			// If the user creation fails, then don't try to do anything else
 		}
-		if currentUser.Jobs.updateProfile && userCreateSuccess {
-			updateUserProfile(hIF, currentUser, &buffer)
-		}
-		if currentUser.Jobs.updateImage && userCreateSuccess {
-			updateUserImage(hIF, currentUser, &buffer)
-		}
-		if len(currentUser.GroupsToRemove) > 0 {
-			removeUserGroups(hIF, currentUser, &buffer)
-		}
-		if len(currentUser.Groups) > 0 && userCreateSuccess {
-			updateUserGroups(hIF, currentUser, &buffer)
-		}
-		if len(currentUser.Roles) > 0 && userCreateSuccess {
-			updateUserRoles(hIF, currentUser, &buffer)
-		}
-		if currentUser.Jobs.updateStatus && userCreateSuccess {
-			updateUserStatus(hIF, currentUser, &buffer)
-		}
-		if currentUser.Jobs.updateHomeOrg {
-			userGroupSetHomeOrg(hIF, currentUser, &buffer)
+		if blnContinue {
+
+			if currentUser.Jobs.update || currentUser.Jobs.updateType || currentUser.Jobs.updateSite {
+				updateUser(hIF, currentUser, &buffer)
+			}
+			if currentUser.Jobs.updateProfile {
+				updateUserProfile(hIF, currentUser, &buffer)
+			}
+			if currentUser.Jobs.updateImage {
+				updateUserImage(hIF, currentUser, &buffer)
+			}
+			if len(currentUser.GroupsToRemove) > 0 {
+				removeUserGroups(hIF, currentUser, &buffer)
+			}
+			if len(currentUser.Groups) > 0 {
+				updateUserGroups(hIF, currentUser, &buffer)
+			}
+			if len(currentUser.Roles) > 0 {
+				updateUserRoles(hIF, currentUser, &buffer)
+			}
+			if currentUser.Jobs.updateStatus {
+				updateUserStatus(hIF, currentUser, &buffer)
+			}
+			if currentUser.Jobs.updateHomeOrg {
+				userGroupSetHomeOrg(hIF, currentUser, &buffer)
+			}
 		}
 		bar.Increment()
 
@@ -103,7 +108,7 @@ func createUser(espXmlmc *apiLib.XmlmcInstStruct, currentUser *userWorkingDataSt
 		CounterInc(1)
 	} else {
 		CounterInc(7)
-		buffer.WriteString(loggerGen(4, "Unable to Create User: "+currentUser.Account.UserID+" Error: "+err.Error()))
+		buffer.WriteString(loggerGen(4, "Unable to Create User: "+currentUser.Account.CheckID+" Error: "+err.Error()))
 	}
 	return b
 }
@@ -114,7 +119,7 @@ func updateUser(espXmlmc *apiLib.XmlmcInstStruct, currentUser *userWorkingDataSt
 		CounterInc(2)
 	} else {
 		CounterInc(7)
-		buffer.WriteString(loggerGen(4, "Unable to Update User: "+currentUser.Account.UserID+" Error: "+err.Error()))
+		buffer.WriteString(loggerGen(4, "Unable to Update User: "+currentUser.Account.CheckID+" Error: "+err.Error()))
 	}
 }
 
@@ -124,7 +129,7 @@ func updateUserProfile(espXmlmc *apiLib.XmlmcInstStruct, currentUser *userWorkin
 		CounterInc(3)
 	} else {
 		CounterInc(7)
-		buffer.WriteString(loggerGen(4, "Unable to Update User Profile: "+currentUser.Account.UserID+" Error: "+err.Error()))
+		buffer.WriteString(loggerGen(4, "Unable to Update User Profile: "+currentUser.Account.CheckID+" Error: "+err.Error()))
 	}
 }
 
@@ -134,7 +139,7 @@ func updateUserImage(espXmlmc *apiLib.XmlmcInstStruct, currentUser *userWorkingD
 		CounterInc(4)
 	} else {
 		CounterInc(7)
-		buffer.WriteString(loggerGen(4, "Unable to Update User Image: "+currentUser.Account.UserID+" Error: "+err.Error()))
+		buffer.WriteString(loggerGen(4, "Unable to Update User Image: "+currentUser.Account.CheckID+" ("+currentUser.Jobs.id+") Error: "+err.Error()))
 	}
 }
 
@@ -144,7 +149,7 @@ func removeUserGroups(espXmlmc *apiLib.XmlmcInstStruct, currentUser *userWorking
 		CounterInc(8)
 	} else {
 		CounterInc(7)
-		buffer.WriteString(loggerGen(4, "Unable to Remove User Groups: "+currentUser.Account.UserID+" Error: "+err.Error()))
+		buffer.WriteString(loggerGen(4, "Unable to Remove User Groups: "+currentUser.Account.CheckID+" ("+currentUser.Jobs.id+") Error: "+err.Error()))
 	}
 }
 func updateUserGroups(espXmlmc *apiLib.XmlmcInstStruct, currentUser *userWorkingDataStruct, buffer *bytes.Buffer) {
@@ -153,7 +158,7 @@ func updateUserGroups(espXmlmc *apiLib.XmlmcInstStruct, currentUser *userWorking
 		CounterInc(5)
 	} else {
 		CounterInc(7)
-		buffer.WriteString(loggerGen(4, "Unable to Update User Groups: "+currentUser.Account.UserID+" Error: "+err.Error()))
+		buffer.WriteString(loggerGen(4, "Unable to Update User Groups: "+currentUser.Account.CheckID+" ("+currentUser.Jobs.id+") Error: "+err.Error()))
 	}
 }
 
@@ -163,7 +168,7 @@ func updateUserRoles(espXmlmc *apiLib.XmlmcInstStruct, currentUser *userWorkingD
 		CounterInc(6)
 	} else {
 		CounterInc(7)
-		buffer.WriteString(loggerGen(4, "Unable to Update User Roles: "+currentUser.Account.UserID+" Error: "+err.Error()))
+		buffer.WriteString(loggerGen(4, "Unable to Update User Roles: "+currentUser.Account.CheckID+" ("+currentUser.Jobs.id+") Error: "+err.Error()))
 	}
 }
 func updateUserStatus(espXmlmc *apiLib.XmlmcInstStruct, currentUser *userWorkingDataStruct, buffer *bytes.Buffer) {
@@ -172,6 +177,6 @@ func updateUserStatus(espXmlmc *apiLib.XmlmcInstStruct, currentUser *userWorking
 		CounterInc(9)
 	} else {
 		CounterInc(7)
-		buffer.WriteString(loggerGen(4, "Unable to Update User Status: "+currentUser.Account.UserID+" Error: "+err.Error()))
+		buffer.WriteString(loggerGen(4, "Unable to Update User Status: "+currentUser.Account.CheckID+" ("+currentUser.Jobs.id+")"+" Error: "+err.Error()))
 	}
 }
