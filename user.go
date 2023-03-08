@@ -129,7 +129,7 @@ func userCreate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer
 	if JSONResp.State.Error != "" {
 		return false, errors.New(JSONResp.State.Error)
 	}
-	buffer.WriteString(loggerGen(1, "User Create Success: "+user.Account.UserID))
+	buffer.WriteString(loggerGen(1, "User Create Success: "+user.Jobs.id))
 	return true, nil
 }
 
@@ -241,12 +241,12 @@ func userUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer
 		buffer.WriteString(loggerGen(1, "User Update XML "+XMLSTRING))
 		return false, errors.New(JSONResp.State.Error)
 	}
-	buffer.WriteString(loggerGen(1, "User Update Success: "+user.Account.UserID))
+	buffer.WriteString(loggerGen(1, "User Update Success: "+user.Jobs.id))
 	return true, nil
 }
 
 func userProfileUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer *bytes.Buffer) (bool, error) {
-	buffer.WriteString(loggerGen(1, "User Update Profile: "+user.Account.UserID))
+	buffer.WriteString(loggerGen(1, "User Update Profile: "+user.Jobs.id))
 
 	hIF.OpenElement("profileData")
 

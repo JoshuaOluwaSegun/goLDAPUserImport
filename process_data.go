@@ -184,7 +184,7 @@ func setUserPasswordValueForCreate(importData *userWorkingDataStruct) {
 	if importData.Account.Password == "" {
 		//-- Generate Password
 		importData.Account.Password = generatePasswordString(importData)
-		logger(1, "Auto Generated Password for: "+importData.Account.UserID+" - "+importData.Account.Password, false)
+		logger(1, "Auto Generated Password for: "+importData.Jobs.id+" - "+importData.Account.Password, false)
 	}
 	//-- Base64 Encode
 	importData.Account.Password = base64.StdEncoding.EncodeToString([]byte(importData.Account.Password))
@@ -194,7 +194,7 @@ func checkUserNeedsOrgRemoving(importData *userWorkingDataStruct, currentData us
 	if len(ldapImportConf.User.Org) > 0 {
 
 		//-- List of Existing Groups
-		var userExistingGroups = HornbillCache.UserGroups[strings.ToLower(importData.Account.UserID)]
+		var userExistingGroups = HornbillCache.UserGroups[strings.ToLower(importData.Jobs.id)]
 
 		for index := range userExistingGroups {
 			ExistingGroupID := userExistingGroups[index]
@@ -237,7 +237,7 @@ func checkUserNeedsOrgUpdate(importData *userWorkingDataStruct, currentData user
 			orgAction := ldapImportConf.User.Org[orgIndex]
 			if orgAction.Action == "Both" || orgAction.Action == "Update" {
 				var GroupID = getOrgFromLookup(importData, orgAction.Value, orgAction.Options.Type)
-				var userExistingGroups = HornbillCache.UserGroups[strings.ToLower(importData.Account.UserID)]
+				var userExistingGroups = HornbillCache.UserGroups[strings.ToLower(importData.Jobs.id)]
 				//-- Is User Already a Memeber of the Group
 				boolUserInGroup := false
 				for index := range userExistingGroups {
@@ -331,7 +331,7 @@ func checkUserNeedsRoleUpdate(importData *userWorkingDataStruct, currentData use
 		for index := range ldapImportConf.User.Role.Roles {
 			roleName := ldapImportConf.User.Role.Roles[index]
 			foundRole := false
-			var userRoles = HornbillCache.UserRoles[strings.ToLower(importData.Account.UserID)]
+			var userRoles = HornbillCache.UserRoles[strings.ToLower(importData.Jobs.id)]
 			for index2 := range userRoles {
 				if strings.EqualFold(roleName, userRoles[index2]) {
 					foundRole = true

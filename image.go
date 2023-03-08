@@ -128,12 +128,12 @@ func userImageUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, b
 	}
 
 	//- Profile Images are already in cache as Bytes
-	buffer.WriteString(loggerGen(1, "User Profile Image Set: "+user.Account.UserID))
+	buffer.WriteString(loggerGen(1, "User Profile Image Set: "+user.Jobs.id))
 
 	//WebDAV upload
 	image := HornbillCache.Images[user.ImageURI]
 	value := ""
-	relLink := "session/" + user.Account.UserID + "." + ldapImportConf.User.Image.ImageType
+	relLink := "session/" + user.Jobs.id + "." + ldapImportConf.User.Image.ImageType
 	strDAVurl := hIF.DavEndpoint + relLink
 
 	strContentType := "image/jpeg"
@@ -174,7 +174,7 @@ func userImageUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, b
 	}
 
 	buffer.WriteString(loggerGen(1, "Profile Set Image URL: "+value))
-	hIF.SetParam("objectRef", "urn:sys:user:"+user.Account.UserID)
+	hIF.SetParam("objectRef", "urn:sys:user:"+user.Jobs.id)
 	hIF.SetParam("sourceImage", value)
 	var XMLSTRING = hIF.GetParam()
 
@@ -199,7 +199,7 @@ func userImageUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, b
 		buffer.WriteString(loggerGen(1, "Profile Image Set XML "+XMLSTRING))
 		return false, errors.New(JSONResp.State.Error)
 	}
-	buffer.WriteString(loggerGen(1, "Image added to User: "+user.Account.UserID))
+	buffer.WriteString(loggerGen(1, "Image added to User: "+user.Jobs.id))
 
 	//Now go delete the file from dav
 
@@ -231,9 +231,9 @@ func userImageUpdate(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, b
 }
 
 func userImageRemoval(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, buffer *bytes.Buffer) (bool, error) {
-	buffer.WriteString(loggerGen(1, "User Profile Image Removal: "+user.Account.UserID))
+	buffer.WriteString(loggerGen(1, "User Profile Image Removal: "+user.Jobs.id))
 
-	hIF.SetParam("objectRef", "urn:sys:user:"+user.Account.UserID)
+	hIF.SetParam("objectRef", "urn:sys:user:"+user.Jobs.id)
 	var XMLSTRING = hIF.GetParam()
 
 	if Flags.configDryRun {
@@ -256,7 +256,7 @@ func userImageRemoval(hIF *apiLib.XmlmcInstStruct, user *userWorkingDataStruct, 
 		buffer.WriteString(loggerGen(1, "Profile Image Removal XML "+XMLSTRING))
 		return false, errors.New(JSONResp.State.Error)
 	}
-	buffer.WriteString(loggerGen(1, "Image removed for User: "+user.Account.UserID))
+	buffer.WriteString(loggerGen(1, "Image removed for User: "+user.Jobs.id))
 
 	return true, nil
 }
