@@ -36,7 +36,9 @@ func loadUsers() {
 
 	count := getCount("getUserAccountsList")
 	logger(1, "getUserAccountsList Count: "+fmt.Sprintf("%d", count), false)
-	getUserAccountList(count)
+	if !Flags.configSkipCache {
+		getUserAccountList(count)
+	}
 
 	logger(1, "Users Loaded: "+fmt.Sprintf("%d", len(HornbillCache.Users)), false)
 }
@@ -51,7 +53,9 @@ func loadUsersRoles() {
 
 	count := getCount("getUserAccountsRolesList")
 	logger(1, "getUserAccountsRolesList Count: "+fmt.Sprintf("%d", count), false)
-	getUserAccountsRolesList(count)
+	if !Flags.configSkipCache {
+		getUserAccountsRolesList(count)
+	}
 
 	logger(1, "Users Roles Loaded: "+fmt.Sprintf("%d", len(HornbillCache.UserRoles)), false)
 }
@@ -121,7 +125,9 @@ func userIDExistsInLDAP(userID string) bool {
 
 func getUserAccountsGroupsList(count uint64) (recordCount int64) {
 	var loopCount uint64
-
+	if Flags.configSkipCache {
+		return
+	}
 	//-- Init Map
 	HornbillCache.UserGroups = make(map[string][]string)
 	bar := pb.StartNew(int(count))

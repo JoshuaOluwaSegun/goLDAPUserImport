@@ -10,7 +10,7 @@ import (
 // ----- Constants -----
 const (
 	appName         = "goLDAPUserImport"
-	version         = "3.17.0"
+	version         = "3.18.0"
 	applicationName = "LDAP Import Utility"
 	execName        = "ldap_user_import"
 	repo            = "hornbill/goLDAPUserImport"
@@ -64,6 +64,7 @@ var Flags struct {
 	configWorkers    int
 	configAPITimeout int
 	configForceRun   bool
+	configSkipCache  bool
 }
 
 // HornbillCache Struct

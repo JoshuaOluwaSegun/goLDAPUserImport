@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/base64"
 	"fmt"
 	"strconv"
@@ -699,47 +700,7 @@ func processImportActions(l *ldap.Entry) string {
 	//-- init map
 	data.Custom = make(map[string]string)
 
-	data.Account.UserID = getUserFieldValue(l, "UserID", data.Custom)
-	data.Account.CheckID = data.Account.UserID
-
-	switch ldapImportConf.User.HornbillUserIDColumn {
-	case "h_employee_id":
-		{
-			data.Account.CheckID = getUserFieldValue(l, "EmployeeID", data.Custom)
-		}
-	case "h_login_id":
-		{
-			data.Account.CheckID = getUserFieldValue(l, "LoginID", data.Custom)
-		}
-	case "h_email":
-		{
-			data.Account.CheckID = getUserFieldValue(l, "Email", data.Custom)
-		}
-	case "h_mobile":
-		{
-			data.Account.CheckID = getUserFieldValue(l, "Mobile", data.Custom)
-		}
-	case "h_attrib1":
-		{
-			data.Account.CheckID = getProfileFieldValue(l, "Attrib1", data.Custom)
-		}
-	case "h_attrib8":
-		{
-			data.Account.CheckID = getProfileFieldValue(l, "Attrib8", data.Custom)
-		}
-	case "h_sn_a":
-		{
-			data.Account.CheckID = getProfileFieldValue(l, "SocialNetworkA", data.Custom)
-		}
-	}
-
-	if data.Account.CheckID == "" {
-		logger(3, "No Unique Identifier set for this record  "+fmt.Sprintf("%v", l), true)
-		return ""
-	}
-	logger(2, "Process Data for:  "+data.Account.CheckID+" ("+data.Account.UserID+")", false)
-
-	//-- Loop Matches
+	// -- Loop Matches
 	for _, action := range ldapImportConf.Actions {
 		switch action.Action {
 		case "Regex":
@@ -798,26 +759,29 @@ func processImportActions(l *ldap.Entry) string {
 		case "SIDConversion":
 			//-- Grab value from LDAP
 			Outcome := processComplexField(l, action.Value)
+			OutcomeConverted := ""
 			//-- Grab Value from Existing Custom Field
 			Outcome = processImportAction(data.Custom, Outcome)
 			if Outcome != "" {
 				//-- Run Replace
 				sid := objectsid.Decode([]byte(Outcome))
-				Outcome = sid.String()
+				OutcomeConverted = sid.String()
 			}
-			data.Custom["{"+action.Output+"}"] = Outcome
-			logger(1, "SIDConversion Output: "+Outcome, false)
+			data.Custom["{"+action.Output+"}"] = OutcomeConverted
+			logger(1, "SID Conversion Output, From: ["+fmt.Sprintf("%X", []byte(Outcome))+"] To: ["+OutcomeConverted+"]", false)
 		case "GUIDConversion":
 			//-- Grab value from LDAP
 			Outcome := processComplexField(l, action.Value)
+			OutcomeConverted := ""
 			//-- Grab Value from Existing Custom Field
 			Outcome = processImportAction(data.Custom, Outcome)
 			if Outcome != "" {
 				//-- Run Replace
-				Outcome = convertToGUID([]byte(Outcome))
+				OutcomeConverted = convertToGUID([]byte(Outcome))
 			}
-			data.Custom["{"+action.Output+"}"] = Outcome
-			logger(1, "SIDConversion Output: "+Outcome, false)
+			data.Custom["{"+action.Output+"}"] = OutcomeConverted
+
+			logger(1, "ObjectGUID Conversion Output, From: ["+fmt.Sprintf("%X", []byte(Outcome))+"] To: ["+OutcomeConverted+"]", false)
 		case "None":
 			//-- Grab value
 			Outcome := processComplexField(l, action.Value)
@@ -833,6 +797,46 @@ func processImportActions(l *ldap.Entry) string {
 		}
 	}
 
+	data.Account.UserID = getUserFieldValue(l, "UserID", data.Custom)
+	data.Account.CheckID = data.Account.UserID
+
+	switch ldapImportConf.User.HornbillUserIDColumn {
+	case "h_employee_id":
+		{
+			data.Account.CheckID = getUserFieldValue(l, "EmployeeID", data.Custom)
+		}
+	case "h_login_id":
+		{
+			data.Account.CheckID = getUserFieldValue(l, "LoginID", data.Custom)
+		}
+	case "h_email":
+		{
+			data.Account.CheckID = getUserFieldValue(l, "Email", data.Custom)
+		}
+	case "h_mobile":
+		{
+			data.Account.CheckID = getUserFieldValue(l, "Mobile", data.Custom)
+		}
+	case "h_attrib1":
+		{
+			data.Account.CheckID = getProfileFieldValue(l, "Attrib1", data.Custom)
+		}
+	case "h_attrib8":
+		{
+			data.Account.CheckID = getProfileFieldValue(l, "Attrib8", data.Custom)
+		}
+	case "h_sn_a":
+		{
+			data.Account.CheckID = getProfileFieldValue(l, "SocialNetworkA", data.Custom)
+		}
+	}
+
+	if data.Account.CheckID == "" {
+		logger(3, "No Unique Identifier set for this record  "+fmt.Sprintf("%v", l), true)
+		return ""
+	}
+	logger(2, "Process Data for:  "+data.Account.CheckID+" ("+data.Account.UserID+")", false)
+
 	//data.Account.UserID = getUserFieldValue(l, "UserID", data.Custom)
 
 	logger(1, "Import Actions for: "+data.Account.UserID, false)
@@ -845,7 +849,6 @@ func processImportActions(l *ldap.Entry) string {
 
 // -- For Each LDAP User Process Account And Mappings
 func processUserParams(l *ldap.Entry, userID string) {
-
 	data := HornbillCache.UsersWorking[userID]
 	data.Account.LoginID = getUserFieldValue(l, "LoginID", data.Custom)
 	data.Account.EmployeeID = getUserFieldValue(l, "EmployeeID", data.Custom)
@@ -908,6 +911,7 @@ func processUserParams(l *ldap.Entry, userID string) {
 }
 
 func convertToGUID(objectGUID []byte) string {
+	objectGUID = bytes.TrimSpace(objectGUID)
 	if len(objectGUID) < 16 {
 		return ""
 	}

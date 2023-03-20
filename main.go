@@ -128,6 +128,7 @@ func procFlags() {
 	flag.IntVar(&Flags.configAPITimeout, "apitimeout", 60, "Number of Seconds to Timeout an API Connection")
 	flag.IntVar(&Flags.configWorkers, "workers", 1, "Number of Worker threads to use")
 	flag.BoolVar(&Flags.configForceRun, "forcerun", false, "Bypass check on existing running import")
+	flag.BoolVar(&Flags.configSkipCache, "sc", false, "Bypass caching of Hornbill users")
 
 	//-- Parse Flags
 	flag.Parse()
