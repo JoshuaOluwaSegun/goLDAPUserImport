@@ -80,7 +80,9 @@ func main() {
 
 	//-- Get Password Profile
 	getPasswordProfile()
-
+	if ldapImportConf.User.HornbillUserIDColumn == "" {
+		ldapImportConf.User.HornbillUserIDColumn = "h_user_id"
+	}
 	ldapImportConf.User.HornbillUserIDColumn = strings.ToLower(ldapImportConf.User.HornbillUserIDColumn)
 
 	//-- Query LDAP

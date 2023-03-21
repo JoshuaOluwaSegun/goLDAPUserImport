@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 3.18.1 (March 21st, 2023)
+
+Fix:
+
+- Added default unique user ID column when none is provided by the config, to prevent panic
+
 ## 3.18.0 (March 20th, 2023)
 
 Change:
@@ -7,6 +13,7 @@ Change:
 - Improved debug logging of ObjectGUID and SID conversion inputs and outputs
 
 Fix:
+
 - Fixed the order of LDAP data processing, so that actions are processed further up the chain, fixing the issue when ObjectGUID is used as UserID could cause the code to throw a panic
 
 ## 3.17.0 (March 7th 2023)
