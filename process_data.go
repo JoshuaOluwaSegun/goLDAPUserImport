@@ -25,11 +25,11 @@ func processLDAPUsers() {
 	//-- Loop LDAP Users
 	for user := range ldapUsers {
 		// Process Pre Import Actions
-		var userID = processImportActions(ldapUsers[user])
+		userID := processImportActions(ldapUsers[user])
 
 		// Process Params and return userId
-		processUserParams(ldapUsers[user], userID)
 		if userID != "" {
+			processUserParams(ldapUsers[user], userID)
 			var userDN = processComplexField(ldapUsers[user], ldapImportConf.User.UserDN)
 			//-- Write to Cache
 			writeUserToCache(userDN, userID)
@@ -692,7 +692,7 @@ func checkUserNeedsProfileUpdate(importData *userWorkingDataStruct, currentData 
 }
 
 // -- For Each Import Actions process the data
-func processImportActions(l *ldap.Entry) string {
+func processImportActions(l *ldap.Entry) (userID string) {
 
 	//-- Set User Account Attributes
 	var data = new(userWorkingDataStruct)
@@ -832,17 +832,15 @@ func processImportActions(l *ldap.Entry) string {
 	}
 
 	if data.Account.CheckID == "" {
-		logger(3, "No Unique Identifier set for this record  "+fmt.Sprintf("%v", l), true)
+		logger(3, "No Unique Identifier set for this record: "+fmt.Sprintf("%v", l), true)
 		return ""
 	}
 	logger(2, "Process Data for:  "+data.Account.CheckID+" ("+data.Account.UserID+")", false)
 
-	//data.Account.UserID = getUserFieldValue(l, "UserID", data.Custom)
-
 	logger(1, "Import Actions for: "+data.Account.UserID, false)
 
 	//-- Store Result in map of userid
-	var userID = strings.ToLower(data.Account.CheckID)
+	userID = strings.ToLower(data.Account.CheckID)
 	HornbillCache.UsersWorking[userID] = data
 	return userID
 }

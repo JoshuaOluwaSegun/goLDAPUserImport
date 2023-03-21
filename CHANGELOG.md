@@ -1,5 +1,12 @@
 # CHANGELOG
 
+
+## 3.18.2 (March 21st, 2023)
+
+Fix:
+
+- Panic is no longer thrown when userId is not found
+
 ## 3.18.1 (March 21st, 2023)
 
 Fix:
