@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 3.18.3 (March 22nd, 2023)
+
+Fix:
+
+- Edge case where ObjectGUID is configured as the unique identifier, and a user object LDAP ObjectGUID byte array containing 0A in the first element would prevent the user from being created  
 
 ## 3.18.2 (March 21st, 2023)
 

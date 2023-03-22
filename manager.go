@@ -19,8 +19,8 @@ func getManager(importData *userWorkingDataStruct, currentData userAccountStruct
 	logger(1, "LDAP Attribute for Manager Lookup: "+ldapImportConf.User.Manager.Value, false)
 
 	//-- Get Value of Attribute
-	ManagerAttributeName := processComplexField(importData.LDAP, ldapImportConf.User.Manager.Value)
-	ManagerAttributeName = processImportAction(importData.Custom, ManagerAttributeName)
+	ManagerAttributeName := processComplexField(importData.LDAP, ldapImportConf.User.Manager.Value, true)
+	ManagerAttributeName = processImportAction(importData.Custom, ManagerAttributeName, true)
 	if ldapImportConf.User.Manager.Options.MatchAgainstDistinguishedName {
 		logger(1, "Searching Distinguished Name Cache for: "+ManagerAttributeName, false)
 		managerID := getUserFromDNCache(ManagerAttributeName)

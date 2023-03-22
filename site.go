@@ -15,8 +15,8 @@ func getSiteFromLookup(importData *userWorkingDataStruct) string {
 	logger(1, "LDAP Attribute for Site Lookup: "+ldapImportConf.User.Site.Value, false)
 
 	//-- Get Value of Attribute
-	siteAttributeName := processComplexField(importData.LDAP, ldapImportConf.User.Site.Value)
-	siteAttributeName = processImportAction(importData.Custom, siteAttributeName)
+	siteAttributeName := processComplexField(importData.LDAP, ldapImportConf.User.Site.Value, true)
+	siteAttributeName = processImportAction(importData.Custom, siteAttributeName, true)
 	logger(1, "Looking Up Site "+siteAttributeName, false)
 	siteIsInCache, SiteIDCache := siteInCache(siteAttributeName)
 	//-- Check if we have Chached the site already

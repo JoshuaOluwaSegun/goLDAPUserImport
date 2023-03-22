@@ -20,8 +20,8 @@ func getOrgFromLookup(l *userWorkingDataStruct, orgValue string, orgType int) st
 	}
 	//-- Get Value of Attribute
 	logger(1, "LDAP Attribute for Org Lookup: "+orgValue, false)
-	orgAttributeName := processComplexField(l.LDAP, orgValue)
-	orgAttributeName = processImportAction(l.Custom, orgAttributeName)
+	orgAttributeName := processComplexField(l.LDAP, orgValue, true)
+	orgAttributeName = processImportAction(l.Custom, orgAttributeName, true)
 	logger(1, "Looking Up Org "+orgAttributeName, false)
 
 	//-- See if Group is cached

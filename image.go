@@ -100,7 +100,7 @@ func getImage(importData *userWorkingDataStruct) imageStruct {
 	var imageBytes []byte
 
 	//-- Work out the value of URI which may contain [] for LDAP attribute references or just a string
-	importData.ImageURI = processComplexField(importData.LDAP, ldapImportConf.User.Image.URI)
+	importData.ImageURI = processComplexField(importData.LDAP, ldapImportConf.User.Image.URI, true)
 
 	//-- Try and Load from Cache
 	_, found := HornbillCache.Images[importData.ImageURI]

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/base64"
 	"fmt"
 	"strconv"
@@ -30,7 +29,7 @@ func processLDAPUsers() {
 		// Process Params and return userId
 		if userID != "" {
 			processUserParams(ldapUsers[user], userID)
-			var userDN = processComplexField(ldapUsers[user], ldapImportConf.User.UserDN)
+			var userDN = processComplexField(ldapUsers[user], ldapImportConf.User.UserDN, true)
 			//-- Write to Cache
 			writeUserToCache(userDN, userID)
 		}
@@ -705,9 +704,9 @@ func processImportActions(l *ldap.Entry) (userID string) {
 		switch action.Action {
 		case "Regex":
 			//-- Grab value from LDAP
-			Outcome := processComplexField(l, action.Value)
+			Outcome := processComplexField(l, action.Value, true)
 			//-- Grab Value from Existing Custom Field
-			Outcome = processImportAction(data.Custom, Outcome)
+			Outcome = processImportAction(data.Custom, Outcome, true)
 			//-- Process Regex
 			Outcome = processRegexOnString(action.Options.RegexValue, Outcome)
 			//-- Store
@@ -716,9 +715,9 @@ func processImportActions(l *ldap.Entry) (userID string) {
 			logger(1, "Regex Output: "+Outcome, false)
 		case "Replace":
 			//-- Grab value from LDAP
-			Outcome := processComplexField(l, action.Value)
+			Outcome := processComplexField(l, action.Value, true)
 			//-- Grab Value from Existing Custom Field
-			Outcome = processImportAction(data.Custom, Outcome)
+			Outcome = processImportAction(data.Custom, Outcome, true)
 			//-- Run Replace
 			Outcome = strings.Replace(Outcome, action.Options.ReplaceFrom, action.Options.ReplaceWith, -1)
 			//-- Store
@@ -727,9 +726,9 @@ func processImportActions(l *ldap.Entry) (userID string) {
 			logger(1, "Replace Output: "+Outcome, false)
 		case "Trim":
 			//-- Grab value from LDAP
-			Outcome := processComplexField(l, action.Value)
+			Outcome := processComplexField(l, action.Value, true)
 			//-- Grab Value from Existing Custom Field
-			Outcome = processImportAction(data.Custom, Outcome)
+			Outcome = processImportAction(data.Custom, Outcome, true)
 			//-- Run Replace
 			Outcome = strings.TrimSpace(Outcome)
 			Outcome = strings.Replace(Outcome, "\n", "", -1)
@@ -741,9 +740,9 @@ func processImportActions(l *ldap.Entry) (userID string) {
 			logger(1, "Trim Output: "+Outcome, false)
 		case "LDAPDateToDateTime":
 			//-- Grab value from LDAP
-			Outcome := processComplexField(l, action.Value)
+			Outcome := processComplexField(l, action.Value, true)
 			//-- Grab Value from Existing Custom Field
-			Outcome = processImportAction(data.Custom, Outcome)
+			Outcome = processImportAction(data.Custom, Outcome, true)
 			//-- Run Replace
 			i, err := strconv.ParseInt(Outcome, 10, 64)
 			if err != nil {
@@ -758,10 +757,10 @@ func processImportActions(l *ldap.Entry) (userID string) {
 			logger(1, "LDAPDateToDateTime Output: "+Outcome, false)
 		case "SIDConversion":
 			//-- Grab value from LDAP
-			Outcome := processComplexField(l, action.Value)
+			Outcome := processComplexField(l, action.Value, false)
 			OutcomeConverted := ""
 			//-- Grab Value from Existing Custom Field
-			Outcome = processImportAction(data.Custom, Outcome)
+			Outcome = processImportAction(data.Custom, Outcome, false)
 			if Outcome != "" {
 				//-- Run Replace
 				sid := objectsid.Decode([]byte(Outcome))
@@ -771,10 +770,10 @@ func processImportActions(l *ldap.Entry) (userID string) {
 			logger(1, "SID Conversion Output, From: ["+fmt.Sprintf("%X", []byte(Outcome))+"] To: ["+OutcomeConverted+"]", false)
 		case "GUIDConversion":
 			//-- Grab value from LDAP
-			Outcome := processComplexField(l, action.Value)
+			Outcome := processComplexField(l, action.Value, false)
 			OutcomeConverted := ""
 			//-- Grab Value from Existing Custom Field
-			Outcome = processImportAction(data.Custom, Outcome)
+			Outcome = processImportAction(data.Custom, Outcome, false)
 			if Outcome != "" {
 				//-- Run Replace
 				OutcomeConverted = convertToGUID([]byte(Outcome))
@@ -784,9 +783,9 @@ func processImportActions(l *ldap.Entry) (userID string) {
 			logger(1, "ObjectGUID Conversion Output, From: ["+fmt.Sprintf("%X", []byte(Outcome))+"] To: ["+OutcomeConverted+"]", false)
 		case "None":
 			//-- Grab value
-			Outcome := processComplexField(l, action.Value)
+			Outcome := processComplexField(l, action.Value, true)
 			//-- Grab Value from Existing Custom Field
-			Outcome = processImportAction(data.Custom, Outcome)
+			Outcome = processImportAction(data.Custom, Outcome, true)
 			//-- Store
 			data.Custom["{"+action.Output+"}"] = Outcome
 
@@ -909,7 +908,6 @@ func processUserParams(l *ldap.Entry, userID string) {
 }
 
 func convertToGUID(objectGUID []byte) string {
-	objectGUID = bytes.TrimSpace(objectGUID)
 	if len(objectGUID) < 16 {
 		return ""
 	}

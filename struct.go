@@ -10,7 +10,7 @@ import (
 // ----- Constants -----
 const (
 	appName         = "goLDAPUserImport"
-	version         = "3.18.2"
+	version         = "3.18.3"
 	applicationName = "LDAP Import Utility"
 	execName        = "ldap_user_import"
 	repo            = "hornbill/goLDAPUserImport"

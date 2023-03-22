@@ -45,8 +45,8 @@ func getUserFieldValue(u *ldap.Entry, s string, custom map[string]string) string
 	f := reflect.Indirect(r).FieldByName(s)
 	//-- Get Mapped Value
 	var UserMapping = f.String()
-	var stringToReturn = processComplexField(u, UserMapping)
-	stringToReturn = processImportAction(custom, stringToReturn)
+	var stringToReturn = processComplexField(u, UserMapping, true)
+	stringToReturn = processImportAction(custom, stringToReturn, true)
 	return stringToReturn
 }
 
@@ -59,13 +59,13 @@ func getProfileFieldValue(u *ldap.Entry, s string, custom map[string]string) str
 
 	//-- Get Mapped Value
 	var UserProfileMapping = f.String()
-	var stringToReturn = processComplexField(u, UserProfileMapping)
-	stringToReturn = processImportAction(custom, stringToReturn)
+	var stringToReturn = processComplexField(u, UserProfileMapping, true)
+	stringToReturn = processImportAction(custom, stringToReturn, true)
 	return stringToReturn
 }
 
 // -- Match any value wrapped in [] and get its LDAP Attribute Value
-func processComplexField(u *ldap.Entry, s string) string {
+func processComplexField(u *ldap.Entry, s string, trimSpace bool) string {
 	//-- Match $variables from String
 	re1, err := regexp.Compile(`\[(.*?)\]`)
 	if err != nil {
@@ -84,11 +84,13 @@ func processComplexField(u *ldap.Entry, s string) string {
 			//logger(3, "Unable to Load LDAP Attribute: "+v[1:len(v)-1]+" For Input Param: "+s, false)
 			return LDAPAttributeValue
 		}
-		//-- TK UnescapeString to HTML entities are replaced
-		s = html.UnescapeString(strings.Replace(s, v, LDAPAttributeValue, 1))
 
-		//-- TK Remote Any White space leading and trailing a string
-		s = strings.TrimSpace(s)
+		s = strings.Replace(s, v, LDAPAttributeValue, 1)
+		if trimSpace {
+			//-- TK Remote Any White space leading and trailing a string
+			//-- TK UnescapeString to HTML entities are replaced
+			s = html.UnescapeString(strings.TrimSpace(s))
+		}
 	}
 
 	//-- Return Value
@@ -96,7 +98,7 @@ func processComplexField(u *ldap.Entry, s string) string {
 }
 
 // -- Match Any value wrapped in {} and get its Import Action Value
-func processImportAction(u map[string]string, s string) string {
+func processImportAction(u map[string]string, s string, trimSpace bool) string {
 	//-- Match $variables from String
 	re1, err := regexp.Compile(`\{(.*?)\}`)
 	if err != nil {
@@ -114,11 +116,14 @@ func processImportAction(u map[string]string, s string) string {
 		if LDAPAttributeValue == "" {
 			return LDAPAttributeValue
 		}
-		//-- TK UnescapeString to HTML entities are replaced
-		s = html.UnescapeString(strings.Replace(s, v, LDAPAttributeValue, 1))
 
-		//-- TK Remote Any White space leading and trailing a string
-		s = strings.TrimSpace(s)
+		s = strings.Replace(s, v, LDAPAttributeValue, 1)
+
+		if trimSpace {
+			//-- TK UnescapeString to HTML entities are replaced
+			//-- TK Remote Any White space leading and trailing a string
+			s = html.UnescapeString(strings.TrimSpace(s))
+		}
 
 		if s != "" {
 			//-- Return Value
